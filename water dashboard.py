@@ -12,19 +12,20 @@ st.set_page_config(
 )
 
 # --------------------------
-# CUSTOM BACKGROUND IMAGE + CONTENT BOX
+# BACKGROUND IMAGE + FULL CONTAINER STYLING
 # --------------------------
 import base64
 
 def get_base64(file):
     with open(file, "rb") as f:
-        data = f.read()
-    return base64.b64encode(data).decode()
+        return base64.b64encode(f.read()).decode()
 
-img_base64 = get_base64("h7q8951.jpg")
+img_base64 = get_base64("background.jpg")  # Change name if needed
 
 st.markdown(f"""
 <style>
+
+/* Full page background image */
 .stApp {{
     background-image: url("data:image/jpg;base64,{img_base64}");
     background-size: cover;
@@ -32,27 +33,27 @@ st.markdown(f"""
     background-attachment: fixed;
 }}
 
-.main-container {{
-    background-color: rgba(250, 248, 242, 0.95);
-    padding: 3rem;
-    border-radius: 15px;
+/* Main content container (this fixes the partial box issue) */
+.block-container {{
+    background-color: rgba(250, 248, 242, 0.96);
+    padding: 3rem 3rem 3rem 3rem;
+    border-radius: 18px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
     max-width: 900px;
-    margin: auto;
 }}
 
-h1, h2, h3, p, label, div {{
+/* Dark green text everywhere */
+h1, h2, h3, h4, p, label, div, span {{
     color: #1b5e20 !important;
 }}
 
+/* Metric numbers */
 .stMetric {{
     color: #1b5e20 !important;
 }}
 
 </style>
-
-<div class="main-container">
 """, unsafe_allow_html=True)
-
 # --------------------------
 # LOAD DATA (NO LOCAL PATHS)
 # --------------------------
@@ -196,5 +197,6 @@ st.markdown("""
 """)
 
 st.markdown("</div>", unsafe_allow_html=True)
+
 
 
