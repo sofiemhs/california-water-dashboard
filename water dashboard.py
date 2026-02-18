@@ -12,40 +12,46 @@ st.set_page_config(
 )
 
 # --------------------------
-# CUSTOM STYLING (WATERY 🌊)
+# CUSTOM BACKGROUND IMAGE + CONTENT BOX
 # --------------------------
-st.markdown("""
-    <style>
-    .stApp {
-        background: linear-gradient(to bottom, #e0f7fa, #ffffff);
-    }
-    h1 {
-        color: #01579b;
-    }
-    h2, h3 {
-        color: #0277bd;
-    }
-    .stButton>button {
-        background-color: #4fc3f7;
-        color: white;
-    }
-    </style>
+import base64
+
+def get_base64(file):
+    with open(file, "rb") as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
+img_base64 = get_base64("background.jpg")
+
+st.markdown(f"""
+<style>
+.stApp {{
+    background-image: url("data:image/jpg;base64,{img_base64}");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}}
+
+.main-container {{
+    background-color: rgba(250, 248, 242, 0.95);
+    padding: 3rem;
+    border-radius: 15px;
+    max-width: 900px;
+    margin: auto;
+}}
+
+h1, h2, h3, p, label, div {{
+    color: #1b5e20 !important;
+}}
+
+.stMetric {{
+    color: #1b5e20 !important;
+}}
+
+</style>
+
+<div class="main-container">
 """, unsafe_allow_html=True)
-
-st.title("💧 California Lawn Conversion Water Savings Tool")
-
-st.markdown("""
-### What This Tool Does
-This dashboard estimates how much **water and money you could save annually**
-by replacing traditional lawn space with California native plant types.
-
-It uses:
-- WUCOLS Plant Factors
-- CIMIS Evapotranspiration (ETo) Data
-- LADWP Tier 2 Residential Water Rates
-
-Enter your lawn size below and select a plant type to compare.
-""")
 
 # --------------------------
 # LOAD DATA (NO LOCAL PATHS)
@@ -188,3 +194,5 @@ st.markdown("""
 - California CIMIS ETo Data
 - LADWP Residential Water Rate Schedule (Tier 2)
 """)
+
+st.markdown("</div>", unsafe_allow_html=True)
