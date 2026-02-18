@@ -69,6 +69,20 @@ input {{
     border-radius: 8px !important;
 }}
 
+st.markdown("""
+<style>
+div.stButton > button:first-child {
+    background-color: #1b5e20;
+    color: #f6f3ea;
+    font-weight: 600;
+}
+div.stButton > button:hover {
+    background-color: #388e3c;
+    color: #ffffff;
+}
+</style>
+""", unsafe_allow_html=True)
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -162,10 +176,15 @@ st.header("🌿 Enter Your Lawn Information")
 
 lawn_sqft = st.text_input("Enter total lawn area (square feet):")
 
-selected_type = st.selectbox(
-    "Select plant type to convert TO:",
-    plant_options
-)
+st.markdown("### Select a plant type to convert your lawn to:")
+
+# Create a horizontal row of buttons
+selected_type = None
+cols = st.columns(len(plant_options))
+
+for i, plant in enumerate(plant_options):
+    if cols[i].button(plant):
+        selected_type = plant
 
 # --------------------------
 # WATER RATE (TIER 2)
@@ -229,4 +248,5 @@ st.markdown("""
 - California CIMIS ETo Data
 - LADWP Residential Water Rate Schedule (Tier 2)
 """)
+
 
