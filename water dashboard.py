@@ -48,20 +48,6 @@ h1, h2, h3, h4, p, label, div, span {{
     color: #1b5e20 !important;
 }}
 
-/* Dropdown styling: selected box */
-div[data-baseweb="select"] > div {{
-    background-color: #1b5e20 !important;   /* dark green */
-    color: #f6f3ea !important;              /* off-white text */
-    border-radius: 10px !important;
-    font-weight: 600;
-}}
-
-/* Dropdown menu options */
-ul[data-baseweb="list"] li {{
-    background-color: #1b5e20 !important;   /* dark green menu */
-    color: #f6f3ea !important;              /* off-white menu text */
-}}
-
 /* Text input styling */
 input {{
     background-color: #f6f3ea !important;
@@ -69,19 +55,28 @@ input {{
     border-radius: 8px !important;
 }}
 
-st.markdown("""
-<style>
-div.stButton > button:first-child {
-    background-color: #1b5e20;
-    color: #f6f3ea;
+/* Buttons styling */
+div.stButton > button:first-child {{
+    background-color: #1b5e20 !important;
+    color: #f6f3ea !important;
     font-weight: 600;
-}
-div.stButton > button:hover {
-    background-color: #388e3c;
-    color: #ffffff;
-}
-</style>
-""", unsafe_allow_html=True)
+}}
+div.stButton > button:hover {{
+    background-color: #388e3c !important;
+    color: #ffffff !important;
+}}
+
+/* Dropdown styling (if any selectbox remains) */
+div[data-baseweb="select"] > div {{
+    background-color: #1b5e20 !important;
+    color: #f6f3ea !important;
+    border-radius: 10px !important;
+    font-weight: 600;
+}}
+ul[data-baseweb="list"] li {{
+    background-color: #1b5e20 !important;
+    color: #f6f3ea !important;
+}}
 
 </style>
 """, unsafe_allow_html=True)
@@ -248,5 +243,6 @@ st.markdown("""
 - California CIMIS ETo Data
 - LADWP Residential Water Rate Schedule (Tier 2)
 """)
+
 
 
