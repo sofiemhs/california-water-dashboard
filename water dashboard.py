@@ -1,12 +1,13 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import streamlit as st
+import base64
 
 # --------------------------
 # PAGE CONFIG
 # --------------------------
 st.set_page_config(
-    page_title="California Water Savings Tool",
+    page_title="Transform Your Lawn 💧",
     page_icon="💧",
     layout="centered"
 )
@@ -14,8 +15,6 @@ st.set_page_config(
 # --------------------------
 # FLOATING CARD LAYOUT + CUSTOM STYLING
 # --------------------------
-import base64
-
 def get_base64(file):
     with open(file, "rb") as f:
         return base64.b64encode(f.read()).decode()
@@ -49,20 +48,18 @@ h1, h2, h3, h4, p, label, div, span {{
     color: #1b5e20 !important;
 }}
 
-/* Dropdown styling */
+/* Dropdown styling: selected box */
 div[data-baseweb="select"] > div {{
-    background-color: #1b5e20 !important;
-    color: #f6f3ea !important;
+    background-color: #1b5e20 !important;   /* dark green */
+    color: #f6f3ea !important;              /* off-white text */
     border-radius: 10px !important;
+    font-weight: 600;
 }}
 
 /* Dropdown menu options */
-ul {{
-    background-color: #1b5e20 !important;
-}}
-
-li {{
-    color: #f6f3ea !important;
+ul[data-baseweb="list"] li {{
+    background-color: #1b5e20 !important;   /* dark green menu */
+    color: #f6f3ea !important;              /* off-white menu text */
 }}
 
 /* Text input styling */
@@ -143,6 +140,22 @@ lawn_inches = lawn_pf * annual_eto
 plant_options = [p for p in etc_by_type.index if p != "Ornamental Grass"]
 
 # --------------------------
+# TITLE & INSTRUCTIONS
+# --------------------------
+st.markdown("## 💧 Transform Your Lawn, Save Water!")
+st.caption("""
+Type in your lawn area (sq ft) and select a California native plant type to see
+how much water and money you could save annually.
+""")
+st.markdown("""
+Landscaping choices have a big impact on California's water resources.
+By converting traditional lawns to native plants, you reduce water use,
+support biodiversity, and make your yard more resilient.
+
+**This is why your impact matters.**
+""")
+
+# --------------------------
 # USER INPUT
 # --------------------------
 st.header("🌿 Enter Your Lawn Information")
@@ -190,14 +203,13 @@ if lawn_sqft:
         st.success(f"💰 Estimated Annual Cost Savings: ${cost_saved:,.2f}")
 
         # --------------------------
-        # COMPARISON GRAPH (FIXED)
+        # COMPARISON GRAPH
         # --------------------------
         st.subheader("Water Use Comparison")
 
         fig, ax = plt.subplots()
         ax.bar(["Current Lawn", selected_type],
                [lawn_gallons, new_gallons])
-
         ax.set_ylabel("Gallons per Year")
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
@@ -217,12 +229,3 @@ st.markdown("""
 - California CIMIS ETo Data
 - LADWP Residential Water Rate Schedule (Tier 2)
 """)
-
-st.markdown("</div>", unsafe_allow_html=True)
-
-
-
-
-
-
-
