@@ -21,7 +21,7 @@ def get_base64(file):
         data = f.read()
     return base64.b64encode(data).decode()
 
-img_base64 = get_base64("garden.webp")
+img_base64 = get_base64("h7q8951.jpg")
 
 st.markdown(f"""
 <style>
@@ -196,4 +196,5 @@ st.markdown("""
 """)
 
 st.markdown("</div>", unsafe_allow_html=True)
+
 
