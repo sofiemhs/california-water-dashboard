@@ -12,7 +12,7 @@ st.set_page_config(
 )
 
 # --------------------------
-# BACKGROUND IMAGE + FULL CONTAINER STYLING
+# FLOATING CARD LAYOUT + CUSTOM STYLING
 # --------------------------
 import base64
 
@@ -20,7 +20,7 @@ def get_base64(file):
     with open(file, "rb") as f:
         return base64.b64encode(f.read()).decode()
 
-img_base64 = get_base64("wildlifeheader.jpg")  # Change name if needed
+img_base64 = get_base64("background.jpg")
 
 st.markdown(f"""
 <style>
@@ -33,13 +33,15 @@ st.markdown(f"""
     background-attachment: fixed;
 }}
 
-/* Main content container (this fixes the partial box issue) */
+/* FLOATING centered container */
 .block-container {{
-    background-color: rgba(250, 248, 242, 0.96);
+    background-color: rgba(250, 248, 242, 0.97);
     padding: 3rem 3rem 3rem 3rem;
-    border-radius: 18px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    border-radius: 22px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.18);
     max-width: 900px;
+    margin-top: 5rem;
+    margin-bottom: 5rem;
 }}
 
 /* Dark green text everywhere */
@@ -47,69 +49,31 @@ h1, h2, h3, h4, p, label, div, span {{
     color: #1b5e20 !important;
 }}
 
-/* Metric numbers */
-.stMetric {{
+/* Dropdown styling */
+div[data-baseweb="select"] > div {{
+    background-color: #1b5e20 !important;
+    color: #f6f3ea !important;
+    border-radius: 10px !important;
+}}
+
+/* Dropdown menu options */
+ul {{
+    background-color: #1b5e20 !important;
+}}
+
+li {{
+    color: #f6f3ea !important;
+}}
+
+/* Text input styling */
+input {{
+    background-color: #f6f3ea !important;
     color: #1b5e20 !important;
+    border-radius: 8px !important;
 }}
 
 </style>
 """, unsafe_allow_html=True)
-# --------------------------
-# LOAD DATA (NO LOCAL PATHS)
-# --------------------------
-wucols = pd.read_excel("WUCOLS_Los Angeles.xlsx")
-cimis = pd.read_csv("daily_eto_variance.csv")
-
-wucols.columns = wucols.columns.str.strip()
-cimis.columns = cimis.columns.str.strip()
-
-type_column = "Type(s)"
-plant_factor_column = "Plant_Factor"
-
-wucols = wucols[
-    wucols[type_column].str.contains("California Native", na=False)
-    | wucols[type_column].str.contains("Ornamental Grass", na=False)
-]
-
-pf_range_map = {
-    "< 0.10": 0.05,
-    "0.10-0.30": 0.20,
-    "0.40-0.60": 0.50,
-    "0.70-0.90": 0.80
-}
-
-wucols[plant_factor_column] = (
-    wucols[plant_factor_column]
-    .astype(str)
-    .str.strip()
-    .map(pf_range_map)
-)
-
-wucols = wucols.dropna(subset=[plant_factor_column])
-
-valid_types = [
-    "Tree","Shrub","Ground Cover","Ornamental Grass",
-    "Vine","Perennial","Succulent","Palm and Cycad",
-    "Bamboo","Bulb"
-]
-
-def extract_primary_type(type_string):
-    parts = [p.strip() for p in str(type_string).split(",")]
-    for p in parts:
-        if p in valid_types:
-            return p
-    return None
-
-wucols["Primary_Type"] = wucols[type_column].apply(extract_primary_type)
-wucols = wucols.dropna(subset=["Primary_Type"])
-
-pf_by_type = wucols.groupby("Primary_Type")[plant_factor_column].mean()
-
-cimis["Avg ETo (in)"] = pd.to_numeric(cimis["Avg ETo (in)"], errors="coerce")
-cimis = cimis.dropna(subset=["Avg ETo (in)"])
-
-annual_eto = cimis["Avg ETo (in)"].sum()
-etc_by_type = (pf_by_type * annual_eto).sort_values(ascending=False)
 
 # --------------------------
 # BASELINE = LAWN (ORNAMENTAL GRASS PF)
@@ -197,6 +161,7 @@ st.markdown("""
 """)
 
 st.markdown("</div>", unsafe_allow_html=True)
+
 
 
 
