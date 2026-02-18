@@ -55,9 +55,8 @@ input {{
     border-radius: 8px !important;
 }}
 
-st.markdown("""
-<style>
-div.stButton > button:first-child {
+/* Buttons styling */
+div.stButton > button:first-child {{
     background-color: #1b5e20 !important;  /* dark green */
     color: #ffffff !important;             /* white text */
     font-weight: 600;
@@ -65,14 +64,12 @@ div.stButton > button:first-child {
     height: 3rem;                          /* uniform height */
     margin-bottom: 0.5rem;                 /* small spacing between rows if wrapped */
     border-radius: 8px !important;
-}
+}}
 
-div.stButton > button:hover {
+div.stButton > button:hover {{
     background-color: #388e3c !important;  /* slightly lighter green */
     color: #ffffff !important;             /* white text on hover */
-}
-</style>
-""", unsafe_allow_html=True)
+}}
 
 /* Dropdown styling (if any selectbox remains) */
 div[data-baseweb="select"] > div {{
@@ -153,7 +150,7 @@ etc_by_type = (pf_by_type * annual_eto).sort_values(ascending=False)
 lawn_pf = pf_by_type["Ornamental Grass"]
 lawn_inches = lawn_pf * annual_eto
 
-# Remove lawn from dropdown options
+# Remove lawn from button options
 plant_options = [p for p in etc_by_type.index if p != "Ornamental Grass"]
 
 # --------------------------
@@ -161,7 +158,7 @@ plant_options = [p for p in etc_by_type.index if p != "Ornamental Grass"]
 # --------------------------
 st.markdown("## 💧 Transform Your Lawn, Save Water!")
 st.caption("""
-Type in your lawn area (sq ft) and select a California native plant type to see
+Type in your lawn area (sq ft) and click a California native plant type to see
 how much water and money you could save annually.
 """)
 st.markdown("""
@@ -181,12 +178,15 @@ lawn_sqft = st.text_input("Enter total lawn area (square feet):")
 
 st.markdown("### Select a plant type to convert your lawn to:")
 
-# Create a horizontal row of buttons
+# --------------------------
+# BUTTONS FOR PLANT TYPES
+# --------------------------
 selected_type = None
-cols = st.columns(len(plant_options))
+num_buttons = len(plant_options)
+cols = st.columns(num_buttons, gap="medium")  # evenly spaced
 
 for i, plant in enumerate(plant_options):
-    if cols[i].button(plant):
+    if cols[i].button(plant, key=plant):
         selected_type = plant
 
 # --------------------------
@@ -195,13 +195,12 @@ for i, plant in enumerate(plant_options):
 TIER_2_RATE_PER_HCF = 5.50  # LADWP Tier 2 Residential
 water_cost_per_gallon = TIER_2_RATE_PER_HCF / 748
 
-st.caption("Water cost calculations use LADWP Tier 2 Residential Rate: "
-           "$5.50 per HCF")
+st.caption("Water cost calculations use LADWP Tier 2 Residential Rate: $5.50 per HCF")
 
 # --------------------------
 # CALCULATIONS
 # --------------------------
-if lawn_sqft:
+if lawn_sqft and selected_type:
 
     try:
         lawn_sqft = float(lawn_sqft)
@@ -251,7 +250,3 @@ st.markdown("""
 - California CIMIS ETo Data
 - LADWP Residential Water Rate Schedule (Tier 2)
 """)
-
-
-
-
