@@ -76,6 +76,64 @@ input {{
 """, unsafe_allow_html=True)
 
 # --------------------------
+# LOAD DATA
+# --------------------------
+wucols = pd.read_excel("WUCOLS_Los Angeles.xlsx")
+cimis = pd.read_csv("daily_eto_variance.csv")
+
+wucols.columns = wucols.columns.str.strip()
+cimis.columns = cimis.columns.str.strip()
+
+type_column = "Type(s)"
+plant_factor_column = "Plant_Factor"
+
+wucols = wucols[
+    wucols[type_column].str.contains("California Native", na=False)
+    | wucols[type_column].str.contains("Ornamental Grass", na=False)
+]
+
+pf_range_map = {
+    "< 0.10": 0.05,
+    "0.10-0.30": 0.20,
+    "0.40-0.60": 0.50,
+    "0.70-0.90": 0.80
+}
+
+wucols[plant_factor_column] = (
+    wucols[plant_factor_column]
+    .astype(str)
+    .str.strip()
+    .map(pf_range_map)
+)
+
+wucols = wucols.dropna(subset=[plant_factor_column])
+
+valid_types = [
+    "Tree","Shrub","Ground Cover","Ornamental Grass",
+    "Vine","Perennial","Succulent","Palm and Cycad",
+    "Bamboo","Bulb"
+]
+
+def extract_primary_type(type_string):
+    parts = [p.strip() for p in str(type_string).split(",")]
+    for p in parts:
+        if p in valid_types:
+            return p
+    return None
+
+wucols["Primary_Type"] = wucols[type_column].apply(extract_primary_type)
+wucols = wucols.dropna(subset=["Primary_Type"])
+
+pf_by_type = wucols.groupby("Primary_Type")[plant_factor_column].mean()
+
+cimis["Avg ETo (in)"] = pd.to_numeric(cimis["Avg ETo (in)"], errors="coerce")
+cimis = cimis.dropna(subset=["Avg ETo (in)"])
+
+annual_eto = cimis["Avg ETo (in)"].sum()
+
+etc_by_type = (pf_by_type * annual_eto).sort_values(ascending=False)
+
+# --------------------------
 # BASELINE = LAWN (ORNAMENTAL GRASS PF)
 # --------------------------
 lawn_pf = pf_by_type["Ornamental Grass"]
@@ -161,6 +219,7 @@ st.markdown("""
 """)
 
 st.markdown("</div>", unsafe_allow_html=True)
+
 
 
 
