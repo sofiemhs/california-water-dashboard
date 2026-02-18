@@ -56,19 +56,20 @@ input {{
 }}
 
 /* Buttons styling */
-div.stButton > button:first-child {{
+div.stButton > button {{
     background-color: #1b5e20 !important;  /* dark green */
     color: #ffffff !important;             /* white text */
-    font-weight: 600;
+    font-weight: 600 !important;
     width: 100% !important;                /* full width of column */
-    height: 3rem;                          /* uniform height */
-    margin-bottom: 0.5rem;                 /* small spacing between rows if wrapped */
+    height: 3rem !important;               /* uniform height */
+    margin-bottom: 0.5rem !important;     /* spacing if wrapped */
     border-radius: 8px !important;
+    text-align: center !important;
 }}
 
 div.stButton > button:hover {{
     background-color: #388e3c !important;  /* slightly lighter green */
-    color: #ffffff !important;             /* white text on hover */
+    color: #ffffff !important;             /* keep white text */
 }}
 
 /* Dropdown styling (if any selectbox remains) */
@@ -178,16 +179,16 @@ lawn_sqft = st.text_input("Enter total lawn area (square feet):")
 
 st.markdown("### Select a plant type to convert your lawn to:")
 
-# --------------------------
-# BUTTONS FOR PLANT TYPES
-# --------------------------
+# Ensure all buttons are the same width and evenly spaced
 selected_type = None
 num_buttons = len(plant_options)
-cols = st.columns(num_buttons, gap="medium")  # evenly spaced
+cols = st.columns(num_buttons, gap="small")  # evenly spaced columns
 
 for i, plant in enumerate(plant_options):
-    if cols[i].button(plant, key=plant):
+    # Force button to full width and white text
+    if cols[i].button(f"{plant}", key=plant, help=f"Convert to {plant}"):
         selected_type = plant
+
 
 # --------------------------
 # WATER RATE (TIER 2)
@@ -250,3 +251,4 @@ st.markdown("""
 - California CIMIS ETo Data
 - LADWP Residential Water Rate Schedule (Tier 2)
 """)
+
