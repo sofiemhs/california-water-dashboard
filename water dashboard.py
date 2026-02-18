@@ -1,14 +1,82 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import streamlit as st
+import base64
 
-st.title("California Native Plant Water Use Dashboard")
+# --------------------------
+# PAGE CONFIG
+# --------------------------
+st.set_page_config(
+    page_title="Transform Your Lawn 💧",
+    page_icon="💧",
+    layout="centered"
+)
+
+# --------------------------
+# FLOATING CARD LAYOUT + CUSTOM STYLING
+# --------------------------
+def get_base64(file):
+    with open(file, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+img_base64 = get_base64("wildlifeheader.jpg")
+
+st.markdown(f"""
+<style>
+
+/* Full page background image */
+.stApp {{
+    background-image: url("data:image/jpg;base64,{img_base64}");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}}
+
+/* FLOATING centered container */
+.block-container {{
+    background-color: rgba(250, 248, 242, 0.97);
+    padding: 3rem 3rem 3rem 3rem;
+    border-radius: 22px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+    max-width: 900px;
+    margin-top: 5rem;
+    margin-bottom: 5rem;
+}}
+
+/* Dark green text everywhere */
+h1, h2, h3, h4, p, label, div, span {{
+    color: #1b5e20 !important;
+}}
+
+/* Dropdown styling: selected box */
+div[data-baseweb="select"] > div {{
+    background-color: #1b5e20 !important;   /* dark green */
+    color: #f6f3ea !important;              /* off-white text */
+    border-radius: 10px !important;
+    font-weight: 600;
+}}
+
+/* Dropdown menu options */
+ul[data-baseweb="list"] li {{
+    background-color: #1b5e20 !important;   /* dark green menu */
+    color: #f6f3ea !important;              /* off-white menu text */
+}}
+
+/* Text input styling */
+input {{
+    background-color: #f6f3ea !important;
+    color: #1b5e20 !important;
+    border-radius: 8px !important;
+}}
+
+</style>
+""", unsafe_allow_html=True)
 
 # --------------------------
 # LOAD DATA
 # --------------------------
-wucols = pd.read_excel("C:/Users/sofie/OneDrive/Desktop/WUCOLS_Los Angeles.xlsx")
-cimis = pd.read_csv("C:/Users/sofie/OneDrive/Desktop/daily_eto_variance.csv")
+wucols = pd.read_excel("WUCOLS_Los Angeles.xlsx")
+cimis = pd.read_csv("daily_eto_variance.csv")
 
 wucols.columns = wucols.columns.str.strip()
 cimis.columns = cimis.columns.str.strip()
@@ -16,7 +84,6 @@ cimis.columns = cimis.columns.str.strip()
 type_column = "Type(s)"
 plant_factor_column = "Plant_Factor"
 
-# Filter plants
 wucols = wucols[
     wucols[type_column].str.contains("California Native", na=False)
     | wucols[type_column].str.contains("Ornamental Grass", na=False)
@@ -37,13 +104,6 @@ wucols[plant_factor_column] = (
 )
 
 wucols = wucols.dropna(subset=[plant_factor_column])
-
-wucols[type_column] = (
-    wucols[type_column]
-    .str.replace("California Native", "", regex=False)
-    .str.replace("Arboretum All-Star", "", regex=False)
-    .str.strip()
-)
 
 valid_types = [
     "Tree","Shrub","Ground Cover","Ornamental Grass",
@@ -71,75 +131,101 @@ annual_eto = cimis["Avg ETo (in)"].sum()
 etc_by_type = (pf_by_type * annual_eto).sort_values(ascending=False)
 
 # --------------------------
-# DISPLAY BAR GRAPH
+# BASELINE = LAWN (ORNAMENTAL GRASS PF)
 # --------------------------
-st.subheader("Average Annual Water Use by Plant Type")
+lawn_pf = pf_by_type["Ornamental Grass"]
+lawn_inches = lawn_pf * annual_eto
 
-fig, ax = plt.subplots(figsize=(12,6))
-etc_by_type.plot(kind="bar", ax=ax)
+# Remove lawn from dropdown options
+plant_options = [p for p in etc_by_type.index if p != "Ornamental Grass"]
 
-ax.set_ylabel("Annual Water Use (inches/year)")
-ax.set_xlabel("Plant Type")
-ax.set_xticklabels(etc_by_type.index, rotation=45, ha='right')
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
+# --------------------------
+# TITLE & INSTRUCTIONS
+# --------------------------
+st.markdown("## 💧 Transform Your Lawn, Save Water!")
+st.caption("""
+Type in your lawn area (sq ft) and select a California native plant type to see
+how much water and money you could save annually.
+""")
+st.markdown("""
+Landscaping choices have a big impact on California's water resources.
+By converting traditional lawns to native plants, you reduce water use,
+support biodiversity, and make your yard more resilient.
 
-st.pyplot(fig)
+**This is why your impact matters.**
+""")
 
 # --------------------------
 # USER INPUT
 # --------------------------
-st.subheader("Estimate Your Water & Cost Savings")
+st.header("🌿 Enter Your Lawn Information")
 
-lawn_sqft = st.number_input("Enter lawn size (sq ft):", min_value=0.0, step=100.0)
+lawn_sqft = st.text_input("Enter total lawn area (square feet):")
 
 selected_type = st.selectbox(
-    "Select plant type to convert to:",
-    etc_by_type.index.tolist()
+    "Select plant type to convert TO:",
+    plant_options
 )
 
 # --------------------------
-# WATER COST SOURCE
-# Replace with official LADWP rate
-# Example: $5.50 per HCF
-# 1 HCF = 748 gallons
+# WATER RATE (TIER 2)
 # --------------------------
-water_cost_per_gallon = 5.50 / 748  # UPDATE using official rate source
+TIER_2_RATE_PER_HCF = 5.50  # LADWP Tier 2 Residential
+water_cost_per_gallon = TIER_2_RATE_PER_HCF / 748
 
-if lawn_sqft > 0:
+st.caption("Water cost calculations use LADWP Tier 2 Residential Rate: "
+           "$5.50 per HCF")
 
-    lawn_pf = pf_by_type["Ornamental Grass"]
+# --------------------------
+# CALCULATIONS
+# --------------------------
+if lawn_sqft:
 
-    lawn_inches = lawn_pf * annual_eto
-    new_inches = etc_by_type[selected_type]
+    try:
+        lawn_sqft = float(lawn_sqft)
 
-    lawn_gallons = lawn_inches * lawn_sqft * 0.623
-    new_gallons = new_inches * lawn_sqft * 0.623
+        new_inches = etc_by_type[selected_type]
 
-    gallons_saved = lawn_gallons - new_gallons
-    cost_saved = gallons_saved * water_cost_per_gallon
+        lawn_gallons = lawn_inches * lawn_sqft * 0.623
+        new_gallons = new_inches * lawn_sqft * 0.623
 
-    st.markdown("### Results")
-    st.write(f"Annual Lawn Water Use: {lawn_gallons:,.0f} gallons")
-    st.write(f"Annual {selected_type} Water Use: {new_gallons:,.0f} gallons")
-    st.write(f"Annual Water Savings: {gallons_saved:,.0f} gallons")
-    st.write(f"Estimated Annual Cost Savings: ${cost_saved:,.2f}")
+        gallons_saved = lawn_gallons - new_gallons
+        cost_saved = gallons_saved * water_cost_per_gallon
 
-    # --------------------------
-    # SIDE-BY-SIDE COMPARISON
-    # --------------------------
-    st.subheader("Water Use Comparison")
+        st.header("📊 Results")
 
-    comparison_data = pd.Series(
-        [lawn_gallons, new_gallons],
-        index=["Current Lawn", selected_type]
-    )
+        col1, col2 = st.columns(2)
 
-    fig2, ax2 = plt.subplots()
-    comparison_data.plot(kind="bar", ax=ax2)
+        col1.metric("Annual Lawn Use", f"{lawn_gallons:,.0f} gal")
+        col2.metric(f"{selected_type} Use", f"{new_gallons:,.0f} gal")
 
-    ax2.set_ylabel("Gallons per Year")
-    ax2.spines['top'].set_visible(False)
-    ax2.spines['right'].set_visible(False)
+        st.success(f"💧 Annual Water Savings: {gallons_saved:,.0f} gallons")
+        st.success(f"💰 Estimated Annual Cost Savings: ${cost_saved:,.2f}")
 
-    st.pyplot(fig2)
+        # --------------------------
+        # COMPARISON GRAPH
+        # --------------------------
+        st.subheader("Water Use Comparison")
+
+        fig, ax = plt.subplots()
+        ax.bar(["Current Lawn", selected_type],
+               [lawn_gallons, new_gallons])
+        ax.set_ylabel("Gallons per Year")
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+
+        st.pyplot(fig)
+
+    except ValueError:
+        st.error("Please enter a valid number for square footage.")
+
+# --------------------------
+# FOOTER
+# --------------------------
+st.markdown("""
+---
+**Data Sources**
+- WUCOLS IV (Water Use Classification of Landscape Species)
+- California CIMIS ETo Data
+- LADWP Residential Water Rate Schedule (Tier 2)
+""")
