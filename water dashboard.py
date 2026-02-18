@@ -158,13 +158,27 @@ support biodiversity, and make your yard more resilient.
 # --------------------------
 st.header("🌿 Enter Your Lawn Information")
 
-lawn_sqft = st.text_input("Enter total lawn area (square feet):")
+lawn_sqft = st.text_input(
+    "Enter total lawn area (square feet):",
+    key="lawn_area_input"  # unique key to prevent duplicate ID
+)
 
-# Dropdown for plant type
+# --------------------------
+# DROPDOWN FOR PLANT TYPE
+# --------------------------
 selected_type = st.selectbox(
     "Select a plant type to convert your lawn to:",
-    options=plant_options
+    options=plant_options,
+    key="plant_type_select"  # unique key fixes duplicate ID error
 )
+
+# --------------------------
+# WATER RATE (TIER 2)
+# --------------------------
+TIER_2_RATE_PER_HCF = 5.50  # LADWP Tier 2 Residential
+water_cost_per_gallon = TIER_2_RATE_PER_HCF / 748
+
+st.caption("Water cost calculations use LADWP Tier 2 Residential Rate: $5.50 per HCF")
 
 # --------------------------
 # CALCULATIONS
@@ -191,69 +205,13 @@ if lawn_sqft and selected_type:
         st.success(f"💧 Annual Water Savings: {gallons_saved:,.0f} gallons")
         st.success(f"💰 Estimated Annual Cost Savings: ${cost_saved:,.2f}")
 
-        # Comparison graph
-        st.subheader("Water Use Comparison")
-        fig, ax = plt.subplots()
-        ax.bar(["Current Lawn", selected_type], [lawn_gallons, new_gallons])
-        ax.set_ylabel("Gallons per Year")
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        st.pyplot(fig)
-
-    except ValueError:
-        st.error("Please enter a valid number for square footage.")
-
-
-# --------------------------
-# DROPDOWN FOR PLANT TYPE
-# --------------------------
-selected_type = st.selectbox(
-    "Select a plant type to convert your lawn to:",
-    options=plant_options
-)
-
-# --------------------------
-# WATER RATE (TIER 2)
-# --------------------------
-TIER_2_RATE_PER_HCF = 5.50  # LADWP Tier 2 Residential
-water_cost_per_gallon = TIER_2_RATE_PER_HCF / 748
-
-st.caption("Water cost calculations use LADWP Tier 2 Residential Rate: $5.50 per HCF")
-
-# --------------------------
-# CALCULATIONS
-# --------------------------
-if lawn_sqft:
-
-    try:
-        lawn_sqft = float(lawn_sqft)
-
-        new_inches = etc_by_type[selected_type]
-
-        lawn_gallons = lawn_inches * lawn_sqft * 0.623
-        new_gallons = new_inches * lawn_sqft * 0.623
-
-        gallons_saved = lawn_gallons - new_gallons
-        cost_saved = gallons_saved * water_cost_per_gallon
-
-        st.header("📊 Results")
-
-        col1, col2 = st.columns(2)
-
-        col1.metric("Annual Lawn Use", f"{lawn_gallons:,.0f} gal")
-        col2.metric(f"{selected_type} Use", f"{new_gallons:,.0f} gal")
-
-        st.success(f"💧 Annual Water Savings: {gallons_saved:,.0f} gallons")
-        st.success(f"💰 Estimated Annual Cost Savings: ${cost_saved:,.2f}")
-
         # --------------------------
         # COMPARISON GRAPH
         # --------------------------
         st.subheader("Water Use Comparison")
 
         fig, ax = plt.subplots()
-        ax.bar(["Current Lawn", selected_type],
-               [lawn_gallons, new_gallons])
+        ax.bar(["Current Lawn", selected_type], [lawn_gallons, new_gallons])
         ax.set_ylabel("Gallons per Year")
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
@@ -273,4 +231,3 @@ st.markdown("""
 - California CIMIS ETo Data
 - LADWP Residential Water Rate Schedule (Tier 2)
 """)
-
