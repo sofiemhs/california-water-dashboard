@@ -55,16 +55,24 @@ input {{
     border-radius: 8px !important;
 }}
 
-/* Buttons styling */
-div.stButton > button:first-child {{
-    background-color: #1b5e20 !important;
-    color: #f6f3ea !important;
+st.markdown("""
+<style>
+div.stButton > button:first-child {
+    background-color: #1b5e20 !important;  /* dark green */
+    color: #ffffff !important;             /* white text */
     font-weight: 600;
-}}
-div.stButton > button:hover {{
-    background-color: #388e3c !important;
-    color: #ffffff !important;
-}}
+    width: 100% !important;                /* full width of column */
+    height: 3rem;                          /* uniform height */
+    margin-bottom: 0.5rem;                 /* small spacing between rows if wrapped */
+    border-radius: 8px !important;
+}
+
+div.stButton > button:hover {
+    background-color: #388e3c !important;  /* slightly lighter green */
+    color: #ffffff !important;             /* white text on hover */
+}
+</style>
+""", unsafe_allow_html=True)
 
 /* Dropdown styling (if any selectbox remains) */
 div[data-baseweb="select"] > div {{
@@ -243,6 +251,7 @@ st.markdown("""
 - California CIMIS ETo Data
 - LADWP Residential Water Rate Schedule (Tier 2)
 """)
+
 
 
 
