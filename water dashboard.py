@@ -180,7 +180,7 @@ image_folder = "images"  # Folder containing images
 
 plant_images = {
     "Shrub": "RGSC-2JAN-native-garden-Cara-Hanstein.jpg",
-    "Ground Cover": "ground_cover.jpg",
+    "Ground Cover": "baccharis-pilularis-pilularis-pigeon-point-3.jpg",
     "Ornamental Grass": "ornamental_grass.jpg",
     "Vine": "vine.jpg",
     "Perennial": "perennial.jpg",
@@ -283,5 +283,6 @@ st.markdown("""
 - LADWP Residential Water Rate Schedule (Tier 2)
 </div>
 """, unsafe_allow_html=True)
+
 
 
