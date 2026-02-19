@@ -164,12 +164,21 @@ st.caption("Enter lawn size and choose a native plant type to compare water savi
 # --------------------------
 st.header("🌿 Enter Your Lawn Information")
 
-lawn_sqft = st.text_input("Enter total lawn area (square feet):")
+lawn_sqft = st.text_input(
+    "Enter total lawn area (square feet):",
+    key="lawn_area_input"
+)
 
 selected_type = st.selectbox(
     "Select plant type to convert TO:",
-    plant_options
+    plant_options,
+    key="plant_type_select"
 )
+
+# --------------------------
+# NEW: Small text for water rate
+# --------------------------
+st.caption("Calculations use LADWP Tier 2 Residential Rate = $5.50 per HCF")
 
 # --------------------------
 # WATER RATE
@@ -240,7 +249,7 @@ if selected_type:
         st.markdown('</div>', unsafe_allow_html=True)
 
 # --------------------------
-# MAKE THE CHANGE LINK (BLACK TEXT)
+# MAKE THE CHANGE LINK
 # --------------------------
 st.markdown('<div style="text-align:center; margin-top:1rem; font-size:1.1rem; color:#000000;">'
             'Make the Change → '
