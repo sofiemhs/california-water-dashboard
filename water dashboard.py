@@ -215,13 +215,24 @@ if lawn_sqft:
         st.subheader("Water Use Comparison")
 
         fig, ax = plt.subplots()
-        ax.bar(["Current Lawn", selected_type],
-               [lawn_gallons, new_gallons])
-        ax.set_ylabel("Gallons per Year")
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
 
-        st.pyplot(fig)
+ax.bar(
+    ["Current Lawn", selected_type],
+    [lawn_gallons, new_gallons]
+)
+
+ax.set_ylabel("Gallons per Year")
+
+# Remove extra borders
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+
+# Add horizontal gridlines
+ax.yaxis.grid(True, linestyle='--', linewidth=0.8, alpha=0.5)
+ax.set_axisbelow(True)  # grid behind bars
+
+st.pyplot(fig)
+
 
     except ValueError:
         st.error("Please enter a valid number for square footage.")
@@ -238,3 +249,4 @@ st.markdown("""
 - LADWP Residential Water Rate Schedule (Tier 2)
 </div>
 """, unsafe_allow_html=True)
+
