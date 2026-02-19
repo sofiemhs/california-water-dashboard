@@ -27,7 +27,6 @@ img_base64 = get_base64("wildlifeheader.jpg")
 st.markdown(f"""
 <style>
 
-/* Background image */
 .stApp {{
     background-image: url("data:image/jpg;base64,{img_base64}");
     background-size: cover;
@@ -35,7 +34,6 @@ st.markdown(f"""
     background-attachment: fixed;
 }}
 
-/* Floating card */
 .block-container {{
     background-color: rgba(250, 248, 242, 0.97);
     padding: 3rem;
@@ -46,12 +44,10 @@ st.markdown(f"""
     margin-bottom: 5rem;
 }}
 
-/* Default text color */
 h1, h2, h3, h4, p, label {{
     color: #1b5e20 !important;
 }}
 
-/* -------- DROPDOWN STYLING -------- */
 div[data-baseweb="select"] > div {{
     background-color: #1b5e20 !important;
     color: #FFFFFF !important;
@@ -72,14 +68,12 @@ ul[role="listbox"] li:hover {{
     background-color: #2e7d32 !important;
 }}
 
-/* Text input styling */
 input {{
     background-color: #f6f3ea !important;
     color: #1b5e20 !important;
     border-radius: 8px !important;
 }}
 
-/* -------- FOOTER OVERRIDE -------- */
 .footer, .footer p, .footer b {{
     color: #000000 !important;
 }}
@@ -98,7 +92,9 @@ cimis.columns = cimis.columns.str.strip()
 
 type_column = "Type(s)"
 plant_factor_column = "Plant_Factor"
+plant_name_column = "Botanical Name"  # Must match WUCOLS column exactly
 
+# Filter plants
 wucols = wucols[
     wucols[type_column].str.contains("California Native", na=False)
     | wucols[type_column].str.contains("Ornamental Grass", na=False)
@@ -121,7 +117,7 @@ wucols[plant_factor_column] = (
 wucols = wucols.dropna(subset=[plant_factor_column])
 
 valid_types = [
-    "Shrub","Ground Cover","Ornamental Grass",
+    "Tree","Shrub","Ground Cover","Ornamental Grass",
     "Vine","Perennial","Succulent","Palm and Cycad",
     "Bamboo","Bulb"
 ]
@@ -142,25 +138,20 @@ cimis["Avg ETo (in)"] = pd.to_numeric(cimis["Avg ETo (in)"], errors="coerce")
 cimis = cimis.dropna(subset=["Avg ETo (in)"])
 
 annual_eto = cimis["Avg ETo (in)"].sum()
-
 etc_by_type = (pf_by_type * annual_eto).sort_values(ascending=False)
 
 # --------------------------
-# BASELINE (LAWN)
+# BASELINE
 # --------------------------
 lawn_pf = pf_by_type["Ornamental Grass"]
 lawn_inches = lawn_pf * annual_eto
-
 plant_options = [p for p in etc_by_type.index if p != "Ornamental Grass"]
 
 # --------------------------
 # TITLE
 # --------------------------
 st.markdown("## 💧 Transform Your Lawn, Save Water!")
-st.caption("""
-Type in your lawn area (sq ft) and select a California native plant type to see
-how much water and money you could save annually.
-""")
+st.caption("Select a plant type to see savings and real examples from WUCOLS.")
 
 # --------------------------
 # USER INPUT
@@ -175,12 +166,28 @@ selected_type = st.selectbox(
 )
 
 # --------------------------
+# SHOW EXAMPLES (ONLY AFTER SELECTION)
+# --------------------------
+if selected_type:
+
+    example_plants = (
+        wucols[wucols["Primary_Type"] == selected_type][plant_name_column]
+        .dropna()
+        .unique()
+    )
+
+    example_list = example_plants[:5]  # Show first 5 examples
+
+    if len(example_list) > 0:
+        st.markdown("### 🌼 Example Plants in This Category")
+        for plant in example_list:
+            st.write(f"- {plant}")
+
+# --------------------------
 # WATER RATE
 # --------------------------
 TIER_2_RATE_PER_HCF = 5.50
 water_cost_per_gallon = TIER_2_RATE_PER_HCF / 748
-
-st.caption("Water cost calculations use LADWP Tier 2 Residential Rate: $5.50 per HCF")
 
 # --------------------------
 # CALCULATIONS
@@ -208,9 +215,6 @@ if lawn_sqft:
 
         st.subheader("Water Use Comparison")
 
-        # --------------------------
-        # COMPARISON GRAPH WITH GRIDLINES
-        # --------------------------
         fig, ax = plt.subplots()
 
         ax.bar(
@@ -219,11 +223,9 @@ if lawn_sqft:
         )
 
         ax.set_ylabel("Gallons per Year")
-
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
 
-        # Add horizontal gridlines
         ax.yaxis.grid(True, linestyle='--', linewidth=0.8, alpha=0.5)
         ax.set_axisbelow(True)
 
@@ -244,4 +246,3 @@ st.markdown("""
 - LADWP Residential Water Rate Schedule (Tier 2)
 </div>
 """, unsafe_allow_html=True)
-
