@@ -13,14 +13,14 @@ st.set_page_config(
 )
 
 # --------------------------
-# LOAD BACKGROUND IMAGE
+# LOAD BACKGROUND & LOGO
 # --------------------------
 def get_base64(file):
     with open(file, "rb") as f:
         return base64.b64encode(f.read()).decode()
 
 img_base64 = get_base64("wildlifeheader.jpg")
-partner_logo_base64 = get_base64("download.jpg") 
+partner_logo_base64 = get_base64("download.jpg")  # Good Karma Gardens logo
 
 # --------------------------
 # GLOBAL STYLING
@@ -85,25 +85,37 @@ input {{
     color: #000000 !important;
 }}
 
-/* Partner section */
-.partner {{
-    text-align: center;
-    margin-top: 1rem;
-    margin-bottom: 1rem;
+/* Good Karma Gardens header */
+.gkg-header {{
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem;
 }}
 
-.partner img {{
+.gkg-header img {{
     border-radius: 50%;
-    width: 80px;
-    height: 80px;
-    margin-top: 0.5rem;
+    width: 60px;
+    height: 60px;
+    margin-right: 1rem;
 }}
 
-.partner a {{
-    text-decoration: none;
+.gkg-header h3 {{
+    margin: 0;
+    font-size: 1.5rem;
+    color: #1b5e20 !important;
 }}
 
 </style>
+""", unsafe_allow_html=True)
+
+# --------------------------
+# GOOD KARMA GARDENS HEADER
+# --------------------------
+st.markdown(f"""
+<div class="gkg-header">
+    <img src="data:image/png;base64,{partner_logo_base64}" alt="Good Karma Gardens Logo">
+    <h3>Good Karma Gardens</h3>
+</div>
 """, unsafe_allow_html=True)
 
 # --------------------------
@@ -241,7 +253,7 @@ if lawn_sqft:
         st.error("Please enter a valid number for square footage.")
 
 # --------------------------
-# EXAMPLES SECTION (BOTTOM, SMALLER TITLE, BLACK TEXT, COMMA SEPARATED)
+# EXAMPLES SECTION
 # --------------------------
 if selected_type:
     example_plants = (
@@ -259,14 +271,11 @@ if selected_type:
         st.markdown('</div>', unsafe_allow_html=True)
 
 # --------------------------
-# PARTNER SECTION
+# WEBSITE LINK AT BOTTOM
 # --------------------------
-st.markdown('<div class="partner">', unsafe_allow_html=True)
-st.markdown("#### Our Partner Organization")
-st.markdown(f'<a href="https://www.nourish.la/good-karma-gardens?gad_source=1&gad_campaignid=23078365112&gbraid=0AAAAAp3lr9qaWt7GIuHmQdK7B69WzZG4V&gclid=Cj0KCQiA49XMBhDRARIsAOOKJHbLQ5znII6Lm6YRfUjNvc-zlInEhDjnUNT0YV1nSAOIWWWYsXbss5kaAjwWEALw_wcB" target="_blank">'
-            f'<img src="data:image/png;base64,{partner_logo_base64}" alt="Partner Logo"></a>', 
-            unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('<div style="text-align:center; margin-top:1rem;">'
+            '<a href="https://www.nourish.la/good-karma-gardens?gad_source=1&gad_campaignid=23078365112&gbraid=0AAAAAp3lr9qaWt7GIuHmQdK7B69WzZG4V&gclid=Cj0KCQiA49XMBhDRARIsAOOKJHbLQ5znII6Lm6YRfUjNvc-zlInEhDjnUNT0YV1nSAOIWWWYsXbss5kaAjwWEALw_wcB" '
+            'target="_blank">Visit Good Karma Gardens Website</a></div>', unsafe_allow_html=True)
 
 # --------------------------
 # FOOTER
@@ -280,4 +289,3 @@ st.markdown("""
 - LADWP Residential Water Rate Schedule (Tier 2)
 </div>
 """, unsafe_allow_html=True)
-
