@@ -240,12 +240,12 @@ if selected_type:
         st.markdown('</div>', unsafe_allow_html=True)
 
 # --------------------------
-# MAKE THE CHANGE LINK
+# MAKE THE CHANGE LINK (BLACK TEXT)
 # --------------------------
-st.markdown('<div style="text-align:center; margin-top:1rem; font-size:1.1rem;">'
+st.markdown('<div style="text-align:center; margin-top:1rem; font-size:1.1rem; color:#000000;">'
             'Make the Change → '
             '<a href="https://www.nourish.la/good-karma-gardens?gad_source=1&gad_campaignid=23078365112&gbraid=0AAAAAp3lr9qaWt7GIuHmQdK7B69WzZG4V&gclid=Cj0KCQiA49XMBhDRARIsAOOKJHbLQ5znII6Lm6YRfUjNvc-zlInEhDjnUNT0YV1nSAOIWWWYsXbss5kaAjwWEALw_wcB" '
-            'target="_blank">Good Karma Gardens Website</a></div>', unsafe_allow_html=True)
+            'target="_blank" style="color:#000000; text-decoration: underline;">Good Karma Gardens Website</a></div>', unsafe_allow_html=True)
 
 # --------------------------
 # FOOTER
