@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 # --------------------------
-# FLOATING CARD LAYOUT + CUSTOM STYLING
+# LOAD BACKGROUND IMAGE
 # --------------------------
 def get_base64(file):
     with open(file, "rb") as f:
@@ -21,10 +21,13 @@ def get_base64(file):
 
 img_base64 = get_base64("wildlifeheader.jpg")
 
+# --------------------------
+# GLOBAL STYLING
+# --------------------------
 st.markdown(f"""
 <style>
 
-/* Full page background image */
+/* Background image */
 .stApp {{
     background-image: url("data:image/jpg;base64,{img_base64}");
     background-size: cover;
@@ -32,7 +35,7 @@ st.markdown(f"""
     background-attachment: fixed;
 }}
 
-/* FLOATING centered container */
+/* Floating card */
 .block-container {{
     background-color: rgba(250, 248, 242, 0.97);
     padding: 3rem;
@@ -43,7 +46,7 @@ st.markdown(f"""
     margin-bottom: 5rem;
 }}
 
-/* Dark green text everywhere */
+/* Default text color */
 h1, h2, h3, h4, p, label {{
     color: #1b5e20 !important;
 }}
@@ -52,20 +55,20 @@ h1, h2, h3, h4, p, label {{
 
 /* Selected dropdown box */
 div[data-baseweb="select"] > div {{
-    background-color: #1b5e20 !important;   /* dark green */
-    color: #FFFFFF !important;              /* WHITE TEXT */
+    background-color: #1b5e20 !important;
+    color: #FFFFFF !important;
     border-radius: 10px !important;
     font-weight: 600;
 }}
 
-/* Dropdown menu container */
+/* Dropdown menu background */
 ul[role="listbox"] {{
     background-color: #1b5e20 !important;
 }}
 
-/* Dropdown options */
+/* Dropdown options text */
 ul[role="listbox"] li {{
-    color: #FFFFFF !important;              /* WHITE TEXT */
+    color: #FFFFFF !important;
     background-color: #1b5e20 !important;
 }}
 
@@ -81,10 +84,10 @@ input {{
     border-radius: 8px !important;
 }}
 
-/* Footer text override */
-.footer, .footer p, .footer b {
-    color: #000000 !important;   /* BLACK */
-}
+/* -------- FOOTER OVERRIDE -------- */
+.footer, .footer p, .footer b {{
+    color: #000000 !important;
+}}
 
 </style>
 """, unsafe_allow_html=True)
@@ -101,6 +104,7 @@ cimis.columns = cimis.columns.str.strip()
 type_column = "Type(s)"
 plant_factor_column = "Plant_Factor"
 
+# Filter plants
 wucols = wucols[
     wucols[type_column].str.contains("California Native", na=False)
     | wucols[type_column].str.contains("Ornamental Grass", na=False)
@@ -148,7 +152,7 @@ annual_eto = cimis["Avg ETo (in)"].sum()
 etc_by_type = (pf_by_type * annual_eto).sort_values(ascending=False)
 
 # --------------------------
-# BASELINE = LAWN
+# BASELINE (LAWN)
 # --------------------------
 lawn_pf = pf_by_type["Ornamental Grass"]
 lawn_inches = lawn_pf * annual_eto
@@ -156,7 +160,7 @@ lawn_inches = lawn_pf * annual_eto
 plant_options = [p for p in etc_by_type.index if p != "Ornamental Grass"]
 
 # --------------------------
-# TITLE
+# TITLE & INTRO
 # --------------------------
 st.markdown("## 💧 Transform Your Lawn, Save Water!")
 st.caption("""
@@ -234,4 +238,3 @@ st.markdown("""
 - LADWP Residential Water Rate Schedule (Tier 2)
 </div>
 """, unsafe_allow_html=True)
-
