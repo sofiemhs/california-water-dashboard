@@ -13,14 +13,13 @@ st.set_page_config(
 )
 
 # --------------------------
-# LOAD BACKGROUND & LOGO
+# LOAD BACKGROUND IMAGE
 # --------------------------
 def get_base64(file):
     with open(file, "rb") as f:
         return base64.b64encode(f.read()).decode()
 
 img_base64 = get_base64("wildlifeheader.jpg")
-partner_logo_base64 = get_base64("download.jpg")  # Good Karma Gardens logo
 
 # --------------------------
 # GLOBAL STYLING
@@ -85,39 +84,7 @@ input {{
     color: #000000 !important;
 }}
 
-/* Good Karma Gardens header */
-.gkg-header {{
-    display: flex;
-    justify-content: flex-start;  /* align left for text */
-    align-items: center;
-    margin-bottom: 2rem;
-    gap: 0.5rem;
-}}
-
-.gkg-header h3 {{
-    margin: 0;
-    font-size: 1.2rem;  /* smaller font */
-    color: #1b5e20 !important;
-}}
-
-.gkg-header img {{
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    margin-left: auto;  /* push logo to right */
-}}
-
 </style>
-""", unsafe_allow_html=True)
-
-# --------------------------
-# GOOD KARMA GARDENS HEADER
-# --------------------------
-st.markdown(f"""
-<div class="gkg-header">
-    <h3>Good Karma Gardens</h3>
-    <img src="data:image/png;base64,{partner_logo_base64}" alt="Good Karma Gardens Logo">
-</div>
 """, unsafe_allow_html=True)
 
 # --------------------------
@@ -273,11 +240,12 @@ if selected_type:
         st.markdown('</div>', unsafe_allow_html=True)
 
 # --------------------------
-# WEBSITE LINK AT BOTTOM
+# MAKE THE CHANGE LINK
 # --------------------------
-st.markdown('<div style="text-align:center; margin-top:1rem;">'
+st.markdown('<div style="text-align:center; margin-top:1rem; font-size:1.1rem;">'
+            'Make the Change → '
             '<a href="https://www.nourish.la/good-karma-gardens?gad_source=1&gad_campaignid=23078365112&gbraid=0AAAAAp3lr9qaWt7GIuHmQdK7B69WzZG4V&gclid=Cj0KCQiA49XMBhDRARIsAOOKJHbLQ5znII6Lm6YRfUjNvc-zlInEhDjnUNT0YV1nSAOIWWWYsXbss5kaAjwWEALw_wcB" '
-            'target="_blank">Visit Good Karma Gardens Website</a></div>', unsafe_allow_html=True)
+            'target="_blank">Good Karma Gardens Website</a></div>', unsafe_allow_html=True)
 
 # --------------------------
 # FOOTER
@@ -291,4 +259,3 @@ st.markdown("""
 - LADWP Residential Water Rate Schedule (Tier 2)
 </div>
 """, unsafe_allow_html=True)
-
