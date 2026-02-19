@@ -52,8 +52,6 @@ h1, h2, h3, h4, p, label {{
 }}
 
 /* -------- DROPDOWN STYLING -------- */
-
-/* Selected dropdown box */
 div[data-baseweb="select"] > div {{
     background-color: #1b5e20 !important;
     color: #FFFFFF !important;
@@ -61,18 +59,15 @@ div[data-baseweb="select"] > div {{
     font-weight: 600;
 }}
 
-/* Dropdown menu background */
 ul[role="listbox"] {{
     background-color: #1b5e20 !important;
 }}
 
-/* Dropdown options text */
 ul[role="listbox"] li {{
     color: #FFFFFF !important;
     background-color: #1b5e20 !important;
 }}
 
-/* Hover effect */
 ul[role="listbox"] li:hover {{
     background-color: #2e7d32 !important;
 }}
@@ -104,7 +99,6 @@ cimis.columns = cimis.columns.str.strip()
 type_column = "Type(s)"
 plant_factor_column = "Plant_Factor"
 
-# Filter plants
 wucols = wucols[
     wucols[type_column].str.contains("California Native", na=False)
     | wucols[type_column].str.contains("Ornamental Grass", na=False)
@@ -160,7 +154,7 @@ lawn_inches = lawn_pf * annual_eto
 plant_options = [p for p in etc_by_type.index if p != "Ornamental Grass"]
 
 # --------------------------
-# TITLE & INTRO
+# TITLE
 # --------------------------
 st.markdown("## 💧 Transform Your Lawn, Save Water!")
 st.caption("""
@@ -214,25 +208,26 @@ if lawn_sqft:
 
         st.subheader("Water Use Comparison")
 
+        # --------------------------
+        # COMPARISON GRAPH WITH GRIDLINES
+        # --------------------------
         fig, ax = plt.subplots()
 
-ax.bar(
-    ["Current Lawn", selected_type],
-    [lawn_gallons, new_gallons]
-)
+        ax.bar(
+            ["Current Lawn", selected_type],
+            [lawn_gallons, new_gallons]
+        )
 
-ax.set_ylabel("Gallons per Year")
+        ax.set_ylabel("Gallons per Year")
 
-# Remove extra borders
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
 
-# Add horizontal gridlines
-ax.yaxis.grid(True, linestyle='--', linewidth=0.8, alpha=0.5)
-ax.set_axisbelow(True)  # grid behind bars
+        # Add horizontal gridlines
+        ax.yaxis.grid(True, linestyle='--', linewidth=0.8, alpha=0.5)
+        ax.set_axisbelow(True)
 
-st.pyplot(fig)
-
+        st.pyplot(fig)
 
     except ValueError:
         st.error("Please enter a valid number for square footage.")
@@ -249,4 +244,3 @@ st.markdown("""
 - LADWP Residential Water Rate Schedule (Tier 2)
 </div>
 """, unsafe_allow_html=True)
-
