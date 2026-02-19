@@ -20,7 +20,7 @@ def get_base64(file):
         return base64.b64encode(f.read()).decode()
 
 img_base64 = get_base64("wildlifeheader.jpg")
-partner_logo_base64 = get_base64("partner_logo.png")  # <-- add your partner logo file here
+partner_logo_base64 = get_base64("download.jpg") 
 
 # --------------------------
 # GLOBAL STYLING
@@ -280,3 +280,4 @@ st.markdown("""
 - LADWP Residential Water Rate Schedule (Tier 2)
 </div>
 """, unsafe_allow_html=True)
+
