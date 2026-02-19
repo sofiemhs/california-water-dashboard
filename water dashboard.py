@@ -20,6 +20,7 @@ def get_base64(file):
         return base64.b64encode(f.read()).decode()
 
 img_base64 = get_base64("wildlifeheader.jpg")
+partner_logo_base64 = get_base64("partner_logo.png")  # <-- add your partner logo file here
 
 # --------------------------
 # GLOBAL STYLING
@@ -82,6 +83,24 @@ input {{
 /* Example section text */
 .examples, .examples p, .examples li, .examples h4 {{
     color: #000000 !important;
+}}
+
+/* Partner section */
+.partner {{
+    text-align: center;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}}
+
+.partner img {{
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    margin-top: 0.5rem;
+}}
+
+.partner a {{
+    text-decoration: none;
 }}
 
 </style>
@@ -240,6 +259,16 @@ if selected_type:
         st.markdown('</div>', unsafe_allow_html=True)
 
 # --------------------------
+# PARTNER SECTION
+# --------------------------
+st.markdown('<div class="partner">', unsafe_allow_html=True)
+st.markdown("#### Our Partner Organization")
+st.markdown(f'<a href="https://www.nourish.la/good-karma-gardens?gad_source=1&gad_campaignid=23078365112&gbraid=0AAAAAp3lr9qaWt7GIuHmQdK7B69WzZG4V&gclid=Cj0KCQiA49XMBhDRARIsAOOKJHbLQ5znII6Lm6YRfUjNvc-zlInEhDjnUNT0YV1nSAOIWWWYsXbss5kaAjwWEALw_wcB" target="_blank">'
+            f'<img src="data:image/png;base64,{partner_logo_base64}" alt="Partner Logo"></a>', 
+            unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
+
+# --------------------------
 # FOOTER
 # --------------------------
 st.markdown("""
@@ -251,6 +280,3 @@ st.markdown("""
 - LADWP Residential Water Rate Schedule (Tier 2)
 </div>
 """, unsafe_allow_html=True)
-
-
-
