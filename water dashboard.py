@@ -11,22 +11,6 @@ st.set_page_config(
     page_icon="💧",
     layout="centered"
 )
-# --------------------------
-# CUSTOM CSS (Dropdown Text Color)
-# --------------------------
-st.markdown("""
-    <style>
-    /* Change dropdown selected text color */
-    div[data-baseweb="select"] > div {
-        color: #F5F5F0 !important;  /* replace with your exact off-white */
-    }
-
-    /* Change dropdown menu options text color */
-    ul[role="listbox"] li {
-        color: #F5F5F0 !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
 
 # --------------------------
 # FLOATING CARD LAYOUT + CUSTOM STYLING
@@ -51,7 +35,7 @@ st.markdown(f"""
 /* FLOATING centered container */
 .block-container {{
     background-color: rgba(250, 248, 242, 0.97);
-    padding: 3rem 3rem 3rem 3rem;
+    padding: 3rem;
     border-radius: 22px;
     box-shadow: 0 20px 60px rgba(0,0,0,0.18);
     max-width: 900px;
@@ -60,22 +44,34 @@ st.markdown(f"""
 }}
 
 /* Dark green text everywhere */
-h1, h2, h3, h4, p, label, div, span {{
+h1, h2, h3, h4, p, label {{
     color: #1b5e20 !important;
 }}
 
-/* Dropdown styling: selected box */
+/* -------- DROPDOWN STYLING -------- */
+
+/* Selected dropdown box */
 div[data-baseweb="select"] > div {{
     background-color: #1b5e20 !important;   /* dark green */
-    color: #f6f3ea !important;              /* off-white text */
+    color: #FFFFFF !important;              /* WHITE TEXT */
     border-radius: 10px !important;
     font-weight: 600;
 }}
 
-/* Dropdown menu options */
-ul[data-baseweb="list"] li {{
-    background-color: #1b5e20 !important;   /* dark green menu */
-    color: #f6f3ea !important;              /* off-white menu text */
+/* Dropdown menu container */
+ul[role="listbox"] {{
+    background-color: #1b5e20 !important;
+}}
+
+/* Dropdown options */
+ul[role="listbox"] li {{
+    color: #FFFFFF !important;              /* WHITE TEXT */
+    background-color: #1b5e20 !important;
+}}
+
+/* Hover effect */
+ul[role="listbox"] li:hover {{
+    background-color: #2e7d32 !important;
 }}
 
 /* Text input styling */
@@ -147,28 +143,20 @@ annual_eto = cimis["Avg ETo (in)"].sum()
 etc_by_type = (pf_by_type * annual_eto).sort_values(ascending=False)
 
 # --------------------------
-# BASELINE = LAWN (ORNAMENTAL GRASS PF)
+# BASELINE = LAWN
 # --------------------------
 lawn_pf = pf_by_type["Ornamental Grass"]
 lawn_inches = lawn_pf * annual_eto
 
-# Remove lawn from dropdown options
 plant_options = [p for p in etc_by_type.index if p != "Ornamental Grass"]
 
 # --------------------------
-# TITLE & INSTRUCTIONS
+# TITLE
 # --------------------------
 st.markdown("## 💧 Transform Your Lawn, Save Water!")
 st.caption("""
 Type in your lawn area (sq ft) and select a California native plant type to see
 how much water and money you could save annually.
-""")
-st.markdown("""
-Landscaping choices have a big impact on California's water resources.
-By converting traditional lawns to native plants, you reduce water use,
-support biodiversity, and make your yard more resilient.
-
-**This is why your impact matters.**
 """)
 
 # --------------------------
@@ -184,19 +172,17 @@ selected_type = st.selectbox(
 )
 
 # --------------------------
-# WATER RATE (TIER 2)
+# WATER RATE
 # --------------------------
-TIER_2_RATE_PER_HCF = 5.50  # LADWP Tier 2 Residential
+TIER_2_RATE_PER_HCF = 5.50
 water_cost_per_gallon = TIER_2_RATE_PER_HCF / 748
 
-st.caption("Water cost calculations use LADWP Tier 2 Residential Rate: "
-           "$5.50 per HCF")
+st.caption("Water cost calculations use LADWP Tier 2 Residential Rate: $5.50 per HCF")
 
 # --------------------------
 # CALCULATIONS
 # --------------------------
 if lawn_sqft:
-
     try:
         lawn_sqft = float(lawn_sqft)
 
@@ -211,16 +197,12 @@ if lawn_sqft:
         st.header("📊 Results")
 
         col1, col2 = st.columns(2)
-
         col1.metric("Annual Lawn Use", f"{lawn_gallons:,.0f} gal")
         col2.metric(f"{selected_type} Use", f"{new_gallons:,.0f} gal")
 
         st.success(f"💧 Annual Water Savings: {gallons_saved:,.0f} gallons")
         st.success(f"💰 Estimated Annual Cost Savings: ${cost_saved:,.2f}")
 
-        # --------------------------
-        # COMPARISON GRAPH
-        # --------------------------
         st.subheader("Water Use Comparison")
 
         fig, ax = plt.subplots()
@@ -245,4 +227,3 @@ st.markdown("""
 - California CIMIS ETo Data
 - LADWP Residential Water Rate Schedule (Tier 2)
 """)
-
