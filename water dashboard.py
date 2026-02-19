@@ -74,7 +74,13 @@ input {{
     border-radius: 8px !important;
 }}
 
+/* Footer text */
 .footer, .footer p, .footer b {{
+    color: #000000 !important;
+}}
+
+/* Example section text */
+.examples, .examples p, .examples li, .examples h3 {{
     color: #000000 !important;
 }}
 
@@ -92,7 +98,7 @@ cimis.columns = cimis.columns.str.strip()
 
 type_column = "Type(s)"
 plant_factor_column = "Plant_Factor"
-plant_name_column = "Botanical Name"  # Must match WUCOLS column exactly
+plant_name_column = "Botanical Name"
 
 # Filter plants
 wucols = wucols[
@@ -151,7 +157,7 @@ plant_options = [p for p in etc_by_type.index if p != "Ornamental Grass"]
 # TITLE
 # --------------------------
 st.markdown("## 💧 Transform Your Lawn, Save Water!")
-st.caption("Select a plant type to see savings and real examples from WUCOLS.")
+st.caption("Enter lawn size and choose a native plant type to compare water savings.")
 
 # --------------------------
 # USER INPUT
@@ -164,24 +170,6 @@ selected_type = st.selectbox(
     "Select plant type to convert TO:",
     plant_options
 )
-
-# --------------------------
-# SHOW EXAMPLES (ONLY AFTER SELECTION)
-# --------------------------
-if selected_type:
-
-    example_plants = (
-        wucols[wucols["Primary_Type"] == selected_type][plant_name_column]
-        .dropna()
-        .unique()
-    )
-
-    example_list = example_plants[:5]  # Show first 5 examples
-
-    if len(example_list) > 0:
-        st.markdown("### 🌼 Example Plants in This Category")
-        for plant in example_list:
-            st.write(f"- {plant}")
 
 # --------------------------
 # WATER RATE
@@ -225,7 +213,6 @@ if lawn_sqft:
         ax.set_ylabel("Gallons per Year")
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
-
         ax.yaxis.grid(True, linestyle='--', linewidth=0.8, alpha=0.5)
         ax.set_axisbelow(True)
 
@@ -233,6 +220,25 @@ if lawn_sqft:
 
     except ValueError:
         st.error("Please enter a valid number for square footage.")
+
+# --------------------------
+# EXAMPLES SECTION (BOTTOM)
+# --------------------------
+if selected_type:
+    example_plants = (
+        wucols[wucols["Primary_Type"] == selected_type][plant_name_column]
+        .dropna()
+        .unique()
+    )
+
+    example_list = example_plants[:5]
+
+    if len(example_list) > 0:
+        st.markdown('<div class="examples">', unsafe_allow_html=True)
+        st.markdown("### 🌼 Example Plants in This Category")
+        for plant in example_list:
+            st.markdown(f"- {plant}")
+        st.markdown('</div>', unsafe_allow_html=True)
 
 # --------------------------
 # FOOTER
