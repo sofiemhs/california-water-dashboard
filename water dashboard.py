@@ -11,6 +11,22 @@ st.set_page_config(
     page_icon="💧",
     layout="centered"
 )
+# --------------------------
+# CUSTOM CSS (Dropdown Text Color)
+# --------------------------
+st.markdown("""
+    <style>
+    /* Change dropdown selected text color */
+    div[data-baseweb="select"] > div {
+        color: #F5F5F0 !important;  /* replace with your exact off-white */
+    }
+
+    /* Change dropdown menu options text color */
+    ul[role="listbox"] li {
+        color: #F5F5F0 !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 # --------------------------
 # FLOATING CARD LAYOUT + CUSTOM STYLING
@@ -229,3 +245,4 @@ st.markdown("""
 - California CIMIS ETo Data
 - LADWP Residential Water Rate Schedule (Tier 2)
 """)
+
