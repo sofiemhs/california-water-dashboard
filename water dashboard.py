@@ -81,6 +81,11 @@ input {{
     border-radius: 8px !important;
 }}
 
+/* Footer text override */
+.footer, .footer p, .footer b {
+    color: #000000 !important;   /* BLACK */
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -221,9 +226,12 @@ if lawn_sqft:
 # FOOTER
 # --------------------------
 st.markdown("""
----
-**Data Sources**
-- WUCOLS IV (Water Use Classification of Landscape Species)
-- California CIMIS ETo Data
+<div class="footer">
+<hr>
+<b>Data Sources</b><br>
+- WUCOLS IV (Water Use Classification of Landscape Species)<br>
+- California CIMIS ETo Data<br>
 - LADWP Residential Water Rate Schedule (Tier 2)
-""")
+</div>
+""", unsafe_allow_html=True)
+
