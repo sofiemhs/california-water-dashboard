@@ -172,28 +172,6 @@ selected_type = st.selectbox(
 )
 
 # --------------------------
-# SHOW IMAGE BASED ON PLANT TYPE
-# --------------------------
-import os
-
-image_folder = "images"  # Folder containing images
-
-plant_images = {
-    "Shrub": "RGSC-2JAN-native-garden-Cara-Hanstein.jpg",
-    "Ground Cover": "baccharis-pilularis-pilularis-pigeon-point-3.jpg",
-    "Vine": "Vitis-californica.jpg",
-    "Perennial": "fragrant1-4x3-Hummbird-sage-Arvind-Kumar-e1522369076471.jpg",
-    "Succulent": "Dudleya_2_large.jpg",
-    "Palm and Cycad": "download.jpg",
-    "Bulb": "blog2010-dsc00061.jpg"
-}
-
-if selected_type in plant_images:
-    img_path = os.path.join(image_folder, plant_images[selected_type])
-    st.image(img_path, caption=f"{selected_type} Example", use_column_width=True)
-
-
-# --------------------------
 # WATER RATE
 # --------------------------
 TIER_2_RATE_PER_HCF = 5.50
@@ -281,12 +259,3 @@ st.markdown("""
 - LADWP Residential Water Rate Schedule (Tier 2)
 </div>
 """, unsafe_allow_html=True)
-
-
-
-
-
-
-
-
-
