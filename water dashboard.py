@@ -185,7 +185,7 @@ plant_images = {
     "Perennial": "fragrant1-4x3-Hummbird-sage-Arvind-Kumar-e1522369076471.jpg",
     "Succulent": "Dudleya_2_large.jpg",
     "Palm and Cycad": "download.jpg",
-    "Bulb": "bulb.jpg"
+    "Bulb": "blog2010-dsc00061.jpg"
 }
 
 if selected_type in plant_images:
@@ -281,6 +281,7 @@ st.markdown("""
 - LADWP Residential Water Rate Schedule (Tier 2)
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
