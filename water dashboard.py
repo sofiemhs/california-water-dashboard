@@ -183,7 +183,7 @@ plant_images = {
     "Ground Cover": "baccharis-pilularis-pilularis-pigeon-point-3.jpg",
     "Vine": "Vitis-californica.jpg",
     "Perennial": "fragrant1-4x3-Hummbird-sage-Arvind-Kumar-e1522369076471.jpg",
-    "Succulent": "succulent.jpg",
+    "Succulent": "Dudleya_2_large.jpg",
     "Palm and Cycad": "palm_cycad.jpg",
     "Bulb": "bulb.jpg"
 }
@@ -281,6 +281,7 @@ st.markdown("""
 - LADWP Residential Water Rate Schedule (Tier 2)
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
