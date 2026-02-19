@@ -235,7 +235,7 @@ if selected_type:
 
     if len(example_list) > 0:
         st.markdown('<div class="examples">', unsafe_allow_html=True)
-        st.markdown(f"#### Scientific Names of Plants in this Type")
+        st.markdown(f"#### Scientific Names of Plants of this Type")
         st.markdown(", ".join(example_list))
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -251,5 +251,6 @@ st.markdown("""
 - LADWP Residential Water Rate Schedule (Tier 2)
 </div>
 """, unsafe_allow_html=True)
+
 
 
