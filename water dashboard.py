@@ -123,7 +123,7 @@ wucols[plant_factor_column] = (
 wucols = wucols.dropna(subset=[plant_factor_column])
 
 valid_types = [
-    "Tree","Shrub","Ground Cover","Ornamental Grass",
+    "Shrub","Ground Cover","Ornamental Grass",
     "Vine","Perennial","Succulent","Palm and Cycad",
     "Bamboo","Bulb"
 ]
@@ -251,3 +251,4 @@ st.markdown("""
 - LADWP Residential Water Rate Schedule (Tier 2)
 </div>
 """, unsafe_allow_html=True)
+
