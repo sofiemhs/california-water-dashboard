@@ -88,21 +88,23 @@ input {{
 /* Good Karma Gardens header */
 .gkg-header {{
     display: flex;
+    justify-content: flex-start;  /* align left for text */
     align-items: center;
     margin-bottom: 2rem;
-}}
-
-.gkg-header img {{
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    margin-right: 1rem;
+    gap: 0.5rem;
 }}
 
 .gkg-header h3 {{
     margin: 0;
-    font-size: 1.5rem;
+    font-size: 1.2rem;  /* smaller font */
     color: #1b5e20 !important;
+}}
+
+.gkg-header img {{
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    margin-left: auto;  /* push logo to right */
 }}
 
 </style>
@@ -113,8 +115,8 @@ input {{
 # --------------------------
 st.markdown(f"""
 <div class="gkg-header">
-    <img src="data:image/png;base64,{partner_logo_base64}" alt="Good Karma Gardens Logo">
     <h3>Good Karma Gardens</h3>
+    <img src="data:image/png;base64,{partner_logo_base64}" alt="Good Karma Gardens Logo">
 </div>
 """, unsafe_allow_html=True)
 
@@ -289,3 +291,4 @@ st.markdown("""
 - LADWP Residential Water Rate Schedule (Tier 2)
 </div>
 """, unsafe_allow_html=True)
+
