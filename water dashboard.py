@@ -80,7 +80,7 @@ input {{
 }}
 
 /* Example section text */
-.examples, .examples p, .examples li, .examples h3 {{
+.examples, .examples p, .examples li, .examples h4 {{
     color: #000000 !important;
 }}
 
@@ -222,7 +222,7 @@ if lawn_sqft:
         st.error("Please enter a valid number for square footage.")
 
 # --------------------------
-# EXAMPLES SECTION (BOTTOM)
+# EXAMPLES SECTION (BOTTOM, SMALLER TITLE, BLACK TEXT, COMMA SEPARATED)
 # --------------------------
 if selected_type:
     example_plants = (
@@ -235,9 +235,8 @@ if selected_type:
 
     if len(example_list) > 0:
         st.markdown('<div class="examples">', unsafe_allow_html=True)
-        st.markdown("### 🌼 Example Plants in This Category")
-        for plant in example_list:
-            st.markdown(f"- {plant}")
+        st.markdown(f"#### 🌼 Example Plants in This Category")
+        st.markdown(", ".join(example_list))
         st.markdown('</div>', unsafe_allow_html=True)
 
 # --------------------------
