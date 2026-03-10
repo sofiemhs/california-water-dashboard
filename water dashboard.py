@@ -169,7 +169,6 @@ selected_type = st.selectbox(
 type_filtered_plants = wucols[wucols["Primary_Type"] == selected_type].copy()
 plant_list = sorted([str(name).title() for name in type_filtered_plants[com_name_col].dropna().unique().tolist()])
 
-# Step 2: Simplified casing for "California native"
 specific_plant = st.selectbox(
     f"2. Search for a specific California native {selected_type} (optional):",
     options=["Average for this type"] + plant_list,
@@ -201,8 +200,10 @@ if lawn_sqft:
         
         if specific_plant == "Average for this type":
             current_ks = pf_by_type[selected_type]
+            display_name = selected_type
         else:
             current_ks = type_filtered_plants[type_filtered_plants[com_name_col].str.title() == specific_plant][pf_column].values[0]
+            display_name = specific_plant
 
         new_inches = (annual_eto * current_ks * kd)
         new_gallons = new_inches * lawn_sqft * 0.623
@@ -216,6 +217,27 @@ if lawn_sqft:
             c1, c2 = st.columns(2)
             c1.metric("Annual Lawn Use", f"{lawn_gallons:,.0f} gal")
             c2.metric("New Landscape Use", f"{new_gallons:,.0f} gal")
+            
+            # --- COLOR CODED TABLE ---
+            st.subheader("📋 Comparison Summary")
+            
+            # Logic for "Good Pick" color coding
+            if new_gallons < lawn_gallons:
+                status_text = "✅ Great Pick (Water Saver)"
+                status_color = "#2e7d32" # Dark Green
+            else:
+                status_text = "⚠️ High Water Use"
+                status_color = "#c62828" # Red
+            
+            comparison_df = pd.DataFrame({
+                "Landscape Type": ["Traditional Lawn", f"Native {display_name}"],
+                "Annual Gallons": [f"{lawn_gallons:,.0f}", f"{new_gallons:,.0f}"],
+                "Efficiency Rating": ["Baseline", status_text]
+            })
+            
+            # Displaying the table
+            st.table(comparison_df)
+            
             st.success(f"💧 Annual Water Savings: {gallons_saved:,.0f} gallons")
             st.success(f"💰 Estimated Annual Cost Savings: ${cost_saved:,.2f}")
 
@@ -226,10 +248,10 @@ if lawn_sqft:
             st.pyplot(fig)
 
             st.markdown(f"""
-            > **Ready to make the switch?** > We recommend Calscape.org to find **{specific_plant}s** near you. 
+            > **Ready to make the switch?** We recommend Calscape.org to find **{specific_plant if specific_plant != 'Average for this type' else selected_type}** plants near you. 
             \n
-            **Caution:** Plant names can be confusing!! Often times, multiple names can refer to the same plant, so when you seach and nothing seems to show up... don't despare! 
-            A quick google seach should help you clear the air and see other variations of the plant's name to help you find the native plants that you seek!
+            **Caution:** Plant names can be confusing! Oftentimes, multiple names can refer to the same plant, so when you search and nothing seems to show up... don't despair! 
+            A quick Google search should help you clear the air and see other variations of the plant's name to help you find the native plants that you seek!
             """)
         
         with tab2:
@@ -252,7 +274,7 @@ if lawn_sqft:
                 maintained by the University of California, Davis. This peer-reviewed database assigns water-need categories 
                 to plants based on horticultural research. 
                 * **Lawn Baseline:** Classified as a 'High' water-use species with a coefficient of **{lawn_ks:.2f}**.
-                * **Current Selection:** Your choice ({specific_plant if specific_plant != 'Average for this type' else selected_type}) has a refined coefficient of **{current_ks:.2f}**.
+                * **Current Selection:** Your choice ({display_name}) has a refined coefficient of **{current_ks:.2f}**.
             """)
             
             st.subheader("Step 3: Density Factor Adjustment ($K_d$)")
@@ -285,16 +307,3 @@ st.markdown("""
 - Native Plant Research via <a href="https://calscape.org" target="_blank" style="color:#000000; text-decoration:underline;">Calscape.org</a>
 </div>
 """, unsafe_allow_html=True)
-
-
-
-
-
-
-
-
-
-
-
-
-
