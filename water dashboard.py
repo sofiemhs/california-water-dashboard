@@ -47,7 +47,7 @@ st.markdown(f"""
     margin-bottom: 5rem;
 }}
 
-/* FORCING DARK GREEN ON ALL TEXT ELEMENTS */
+/* FORCING DARK GREEN ON ALL GENERAL TEXT */
 h1, h2, h3, h4, p, label, li, span, div {{
     color: #1b5e20 !important;
 }}
@@ -56,14 +56,15 @@ h1, h2, h3, h4, p, label, li, span, div {{
     color: #1b5e20 !important;
 }}
 
+/* DROPDOWN STYLING - FORCING WHITE TEXT */
 div[data-baseweb="select"] > div {{
     background-color: #1b5e20 !important;
-    color: #FFFFFF !important;
     border-radius: 10px !important;
     font-weight: 600;
 }}
 
-div[data-baseweb="select"] span {{
+/* This ensures the selected text and the text in the list is WHITE */
+div[data-baseweb="select"] * {{
     color: #FFFFFF !important;
 }}
 
@@ -107,15 +108,12 @@ except Exception as e:
     st.error(f"Error loading data files: {e}")
     st.stop()
 
-# Robust Column Identification to fix KeyError
 wucols.columns = wucols.columns.str.strip()
 cimis.columns = cimis.columns.str.strip()
 
-# Find columns dynamically in case names vary (e.g. Common_Name vs Common Name)
 def find_col(possible_names):
     for name in possible_names:
         if name in wucols.columns: return name
-    # Fallback to first column that contains the string
     for col in wucols.columns:
         if possible_names[0].replace(" ", "").lower() in col.replace("_", "").lower():
             return col
@@ -126,7 +124,6 @@ pf_column = find_col(["Plant_Factor", "Plant Factor", "PF"])
 bot_name_col = find_col(["Botanical Name", "Botanical_Name"])
 com_name_col = find_col(["Common Name", "Common_Name"])
 
-# Filter plants (Excluding high-variance types)
 wucols = wucols[
     wucols[type_column].str.contains("California Native", na=False)
     | wucols[type_column].str.contains("Ornamental Grass", na=False)
@@ -150,7 +147,6 @@ def extract_primary_type(type_string):
 wucols["Primary_Type"] = wucols[type_column].apply(extract_primary_type)
 wucols = wucols.dropna(subset=["Primary_Type"])
 
-# Grouping
 pf_by_type = wucols.groupby("Primary_Type")[pf_column].mean()
 cimis["Avg ETo (in)"] = pd.to_numeric(cimis["Avg ETo (in)"], errors="coerce")
 cimis = cimis.dropna(subset=["Avg ETo (in)"])
@@ -165,24 +161,21 @@ st.header("🌿 Enter Your Lawn Information")
 lawn_sqft = st.text_input("Enter total lawn area (square feet):", key="lawn_area_input")
 
 selected_type = st.selectbox(
-    "1. Select a general plant type:",
+    "1. Pick a general group of plants:",
     [p for p in pf_by_type.index if p != "Ornamental Grass"],
     key="type_select"
 )
 
-# NEW: Specific Plant Selection for better accuracy
 type_filtered_plants = wucols[wucols["Primary_Type"] == selected_type].copy()
 type_filtered_plants["Display_Name"] = type_filtered_plants[com_name_col] + " (" + type_filtered_plants[bot_name_col] + ")"
 
 specific_plant = st.selectbox(
-    f"2. Choose a specific {selected_type} (optional):",
+    f"2. Pick a specific {selected_type} (optional):",
     options=["Average for this type"] + sorted(type_filtered_plants["Display_Name"].unique().tolist()[:15]),
-    help="Choosing a specific plant provides a more accurate water factor (Ks)."
 )
 
-# NEW: Improved Density Logic
 density_choice = st.selectbox(
-    "3. Select Planting Density:",
+    "3. How crowded will your plants be?",
     options=["Sparse (Lots of space/mulch visible)", "Medium (Standard spacing)", "Lush (Dense/Full coverage)"],
     index=1
 )
@@ -204,7 +197,6 @@ if lawn_sqft:
         lawn_ks = pf_by_type["Ornamental Grass"]
         lawn_gallons = (annual_eto * lawn_ks * 1.0) * lawn_sqft * 0.623
         
-        # Determine specific KS
         if specific_plant == "Average for this type":
             current_ks = pf_by_type[selected_type]
         else:
@@ -215,7 +207,7 @@ if lawn_sqft:
         gallons_saved = lawn_gallons - new_gallons
         cost_saved = gallons_saved * water_cost_per_gallon
 
-        tab1, tab2 = st.tabs(["📊 Results Dashboard", "🧪 Methodology Breakdown"])
+        tab1, tab2 = st.tabs(["📊 Results Dashboard", "🧪 Methodology (How the Math Works)"])
 
         with tab1:
             st.header("Results")
@@ -225,21 +217,32 @@ if lawn_sqft:
             st.success(f"💧 Annual Water Savings: {gallons_saved:,.0f} gallons")
             st.success(f"💰 Estimated Annual Cost Savings: ${cost_saved:,.2f}")
 
+            # COLORS CHANGED TO BE DISTINCTLY DIFFERENT (Red vs Green)
             fig, ax = plt.subplots()
-            ax.bar(["Current Lawn", "New Landscape"], [lawn_gallons, new_gallons], color=['#4CAF50', '#8BC34A'])
+            ax.bar(["Current Lawn", "New Landscape"], [lawn_gallons, new_gallons], color=['#d32f2f', '#2e7d32'])
             ax.set_ylabel("Gallons per Year")
             ax.yaxis.grid(True, linestyle='--', alpha=0.5)
             st.pyplot(fig)
 
         with tab2:
-            st.header("Calculation Methodology")
-            st.latex(r"ET_L = ET_o \times (K_s \times K_d)")
-            st.markdown(f"""
-            * **$ET_o$:** {annual_eto:.2f}" (Annual local evaporation)
-            * **$K_s$ (Species):** {current_ks:.2f} (Using {'specific selection' if specific_plant != 'Average' else 'type average'})
-            * **$K_d$ (Density):** {kd:.2f} (Using {density_choice.split(' ')[0]} setting)
-            """)
-            st.latex(r"Volume = ET_L \times Area \times 0.623")
+            st.header("How do we figure this out?")
+            st.write("Imagine your yard is a giant thirsty sponge. We use three main 'secrets' to calculate how much water it drinks.")
+            
+            st.subheader("Secret #1: The Sun Factor ($ET_o$)")
+            st.write(f"The sun and wind 'steal' water from the ground. In your area, the sun steals about **{annual_eto:.2f} inches** of water every year! We call this the Reference Evapotranspiration.")
+            
+            st.subheader("Secret #2: The Thirsty Factor ($K_s$)")
+            st.write(f"Not all plants drink the same! Grass is very thirsty, but a {selected_type} is much better at saving water.")
+            st.write(f"* Grass has a Thirsty Factor of **{lawn_ks:.2f}**.")
+            st.write(f"* Your new choice has a Thirsty Factor of **{current_ks:.2f}**.")
+            
+            st.subheader("Secret #3: The Crowd Factor ($K_d$)")
+            st.write(f"If you pack your plants together like a jungle, they use more water. If you leave space for mulch, they use less. You chose **{density_choice.split(' ')[0]}**, which has a multiplier of **{kd:.2f}**.")
+
+            st.markdown("---")
+            st.subheader("The Grand Total Formula")
+            st.write("We multiply the Sun Factor × Thirsty Factor × Crowd Factor to see how many inches of water you need. Then we multiply by your yard size and a 'magic number' (0.623) to turn those inches into gallons!")
+            st.latex(r"\text{Gallons} = \text{Sun} \times \text{Thirsty} \times \text{Crowd} \times \text{Area} \times 0.623")
 
     except ValueError:
         st.error("Please enter a valid number for square footage.")
