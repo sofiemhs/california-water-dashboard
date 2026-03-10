@@ -166,8 +166,10 @@ selected_type = st.selectbox(
     key="type_select"
 )
 
+# Filtering plants by type, capitalizing appropriately, and removing duplicates
 type_filtered_plants = wucols[wucols["Primary_Type"] == selected_type].copy()
-plant_list = sorted(type_filtered_plants[com_name_col].dropna().unique().tolist())
+# Title() ensures every word starts with a capital letter
+plant_list = sorted([str(name).title() for name in type_filtered_plants[com_name_col].dropna().unique().tolist()])
 
 specific_plant = st.selectbox(
     f"2. Search for a specific {selected_type} (optional):",
@@ -201,7 +203,8 @@ if lawn_sqft:
         if specific_plant == "Average for this type":
             current_ks = pf_by_type[selected_type]
         else:
-            current_ks = type_filtered_plants[type_filtered_plants[com_name_col] == specific_plant][pf_column].values[0]
+            # Match against the title-cased common name column
+            current_ks = type_filtered_plants[type_filtered_plants[com_name_col].str.title() == specific_plant][pf_column].values[0]
 
         new_inches = (annual_eto * current_ks * kd)
         new_gallons = new_inches * lawn_sqft * 0.623
