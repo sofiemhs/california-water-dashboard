@@ -220,7 +220,7 @@ if lawn_sqft:
             st.success(f"💰 Estimated Annual Cost Savings: ${cost_saved:,.2f}")
 
             st.markdown(f"""
-            > **Ready to make the switch?** > We recommend using [**Calscape.org**](https://calscape.org) to find local nurseries that stock **{specific_plant}s**
+            > **Ready to make the switch?** > We recommend using [**Calscape.org**](https://calscape.org) to find local nurseries that stock **{specific_plant}s**.
             """)
 
             fig, ax = plt.subplots()
@@ -282,5 +282,6 @@ st.markdown("""
 - Native Plant Research via <a href="https://calscape.org" target="_blank" style="color:#000000; text-decoration:underline;">Calscape.org</a>
 </div>
 """, unsafe_allow_html=True)
+
 
 
