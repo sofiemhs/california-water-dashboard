@@ -2,7 +2,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import streamlit as st
 import base64
-import urllib.parse
 
 # --------------------------
 # PAGE CONFIG
@@ -96,21 +95,6 @@ input {{
     color: #000000 !important;
 }}
 
-/* Plant Image Styling */
-.plant-img-container {{
-    text-align: center;
-    margin-bottom: 15px;
-}}
-.plant-img-container img {{
-    border-radius: 15px;
-    max-width: 300px;
-    border: 3px solid #1b5e20;
-    transition: transform .2s;
-}}
-.plant-img-container img:hover {{
-    transform: scale(1.05);
-}}
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -182,48 +166,15 @@ selected_type = st.selectbox(
     key="type_select"
 )
 
-# Filtering plants by type, capitalizing appropriately
 type_filtered_plants = wucols[wucols["Primary_Type"] == selected_type].copy()
 plant_list = sorted([str(name).title() for name in type_filtered_plants[com_name_col].dropna().unique().tolist()])
 
-# Emphasizing Native Plants in step 2
+# Step 2: Simplified casing for "California native"
 specific_plant = st.selectbox(
-    f"2. Search for a specific CALIFORNIA NATIVE {selected_type} (optional):",
+    f"2. Search for a specific California native {selected_type} (optional):",
     options=["Average for this type"] + plant_list,
     help="Every plant in this list is native to California! Type to search."
 )
-
-# HELPER: Get botanical name for reliable search
-def get_bot_name(p_name):
-    # Match the title-cased name back to the dataframe
-    mask = type_filtered_plants[com_name_col].str.title() == p_name
-    if not mask.any():
-        return None
-    return type_filtered_plants[mask].iloc[0][bot_name_col]
-
-calscape_url = None
-if specific_plant != "Average for this type":
-    bot_name = get_bot_name(specific_plant)
-    
-    if bot_name:
-        # Use Search URL instead of direct link to prevent 404s
-        search_query = urllib.parse.quote(bot_name)
-        calscape_url = f"https://calscape.org/search.php?srchtxt={search_query}"
-        
-        # Image fetching logic - Calscape uses botanical names with underscores
-        img_slug = bot_name.replace(" ", "_")
-        
-        st.markdown(f"""
-        <div class="plant-img-container">
-            <p><strong>Selected: {specific_plant}</strong></p>
-            <a href="{calscape_url}" target="_blank">
-                <img src="https://calscape.org/img/photos/nativeplants/{img_slug}.jpg" 
-                     onerror="this.src='https://calscape.org/img/photos/nativeplants/search_no_image.jpg';"
-                     title="Click to view on Calscape">
-            </a>
-            <p style="font-size: 0.8rem;">(Click image to view nursery availability on Calscape)</p>
-        </div>
-        """, unsafe_allow_html=True)
 
 density_choice = st.selectbox(
     "3. How crowded will your plants be?",
@@ -267,6 +218,11 @@ if lawn_sqft:
             c2.metric("New Landscape Use", f"{new_gallons:,.0f} gal")
             st.success(f"💧 Annual Water Savings: {gallons_saved:,.0f} gallons")
             st.success(f"💰 Estimated Annual Cost Savings: ${cost_saved:,.2f}")
+
+            # Calscape Recommendation
+            st.markdown(f"""
+            > **Ready to find these plants?** > We recommend using [**Calscape.org**](https://calscape.org) to find local nurseries that stock these native species and to learn more about their specific care needs.
+            """)
 
             fig, ax = plt.subplots()
             ax.bar(["Current Lawn", "New Landscape"], [lawn_gallons, new_gallons], color='#1b5e20')
@@ -324,6 +280,6 @@ st.markdown("""
 - WUCOLS IV (Water Use Classification of Landscape Species)<br>
 - California CIMIS ETo Data (Station #99 - Santa Monica)<br>
 - LADWP Residential Water Rate Schedule (Tier 2)<br>
-- Native Plant Sourcing & Imagery via <a href="https://calscape.org" target="_blank" style="color:#000000; text-decoration:underline;">Calscape.org</a>
+- Native Plant Research via <a href="https://calscape.org" target="_blank" style="color:#000000; text-decoration:underline;">Calscape.org</a>
 </div>
 """, unsafe_allow_html=True)
