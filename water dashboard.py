@@ -186,34 +186,44 @@ selected_type = st.selectbox(
 type_filtered_plants = wucols[wucols["Primary_Type"] == selected_type].copy()
 plant_list = sorted([str(name).title() for name in type_filtered_plants[com_name_col].dropna().unique().tolist()])
 
+# Emphasizing Native Plants in step 2
 specific_plant = st.selectbox(
-    f"2. Search for a specific {selected_type} (optional):",
+    f"2. Search for a specific CALIFORNIA NATIVE {selected_type} (optional):",
     options=["Average for this type"] + plant_list,
-    help="Type to search for a specific plant name!"
+    help="Every plant in this list is native to California! Type to search."
 )
 
-# HELPER: Get botanical name for URL construction
-def get_plant_data(p_name):
-    row = type_filtered_plants[type_filtered_plants[com_name_col].str.title() == p_name].iloc[0]
-    return row[bot_name_col]
+# HELPER: Get botanical name for reliable search
+def get_bot_name(p_name):
+    # Match the title-cased name back to the dataframe
+    mask = type_filtered_plants[com_name_col].str.title() == p_name
+    if not mask.any():
+        return None
+    return type_filtered_plants[mask].iloc[0][bot_name_col]
 
 calscape_url = None
 if specific_plant != "Average for this type":
-    bot_name = get_plant_data(specific_plant)
-    search_query = urllib.parse.quote(bot_name)
-    calscape_url = f"https://calscape.org/search.php?srchtxt={search_query}"
+    bot_name = get_bot_name(specific_plant)
     
-    st.markdown(f"""
-    <div class="plant-img-container">
-        <p><strong>Selected: {specific_plant}</strong></p>
-        <a href="{calscape_url}" target="_blank">
-            <img src="https://calscape.org/img/photos/nativeplants/{search_query.replace('%20', '_')}.jpg" 
-                 onerror="this.src='https://calscape.org/img/photos/nativeplants/search_no_image.jpg';"
-                 title="Click to view on Calscape">
-        </a>
-        <p style="font-size: 0.8rem;">(Click image to find at nurseries via Calscape)</p>
-    </div>
-    """, unsafe_allow_html=True)
+    if bot_name:
+        # Use Search URL instead of direct link to prevent 404s
+        search_query = urllib.parse.quote(bot_name)
+        calscape_url = f"https://calscape.org/search.php?srchtxt={search_query}"
+        
+        # Image fetching logic - Calscape uses botanical names with underscores
+        img_slug = bot_name.replace(" ", "_")
+        
+        st.markdown(f"""
+        <div class="plant-img-container">
+            <p><strong>Selected: {specific_plant}</strong></p>
+            <a href="{calscape_url}" target="_blank">
+                <img src="https://calscape.org/img/photos/nativeplants/{img_slug}.jpg" 
+                     onerror="this.src='https://calscape.org/img/photos/nativeplants/search_no_image.jpg';"
+                     title="Click to view on Calscape">
+            </a>
+            <p style="font-size: 0.8rem;">(Click image to view nursery availability on Calscape)</p>
+        </div>
+        """, unsafe_allow_html=True)
 
 density_choice = st.selectbox(
     "3. How crowded will your plants be?",
@@ -314,6 +324,6 @@ st.markdown("""
 - WUCOLS IV (Water Use Classification of Landscape Species)<br>
 - California CIMIS ETo Data (Station #99 - Santa Monica)<br>
 - LADWP Residential Water Rate Schedule (Tier 2)<br>
-- Plant Sourcing & Imagery via <a href="https://calscape.org" target="_blank" style="color:#000000; text-decoration:underline;">Calscape.org</a>
+- Native Plant Sourcing & Imagery via <a href="https://calscape.org" target="_blank" style="color:#000000; text-decoration:underline;">Calscape.org</a>
 </div>
 """, unsafe_allow_html=True)
