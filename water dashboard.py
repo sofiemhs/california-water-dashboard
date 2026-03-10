@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import streamlit as st
 import base64
+import urllib.parse
 
 # --------------------------
 # PAGE CONFIG
@@ -95,6 +96,21 @@ input {{
     color: #000000 !important;
 }}
 
+/* Plant Image Styling */
+.plant-img-container {{
+    text-align: center;
+    margin-bottom: 15px;
+}}
+.plant-img-container img {{
+    border-radius: 15px;
+    max-width: 300px;
+    border: 3px solid #1b5e20;
+    transition: transform .2s;
+}}
+.plant-img-container img:hover {{
+    transform: scale(1.05);
+}}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -166,9 +182,8 @@ selected_type = st.selectbox(
     key="type_select"
 )
 
-# Filtering plants by type, capitalizing appropriately, and removing duplicates
+# Filtering plants by type, capitalizing appropriately
 type_filtered_plants = wucols[wucols["Primary_Type"] == selected_type].copy()
-# Title() ensures every word starts with a capital letter
 plant_list = sorted([str(name).title() for name in type_filtered_plants[com_name_col].dropna().unique().tolist()])
 
 specific_plant = st.selectbox(
@@ -176,6 +191,29 @@ specific_plant = st.selectbox(
     options=["Average for this type"] + plant_list,
     help="Type to search for a specific plant name!"
 )
+
+# HELPER: Get botanical name for URL construction
+def get_plant_data(p_name):
+    row = type_filtered_plants[type_filtered_plants[com_name_col].str.title() == p_name].iloc[0]
+    return row[bot_name_col]
+
+calscape_url = None
+if specific_plant != "Average for this type":
+    bot_name = get_plant_data(specific_plant)
+    search_query = urllib.parse.quote(bot_name)
+    calscape_url = f"https://calscape.org/search.php?srchtxt={search_query}"
+    
+    st.markdown(f"""
+    <div class="plant-img-container">
+        <p><strong>Selected: {specific_plant}</strong></p>
+        <a href="{calscape_url}" target="_blank">
+            <img src="https://calscape.org/img/photos/nativeplants/{search_query.replace('%20', '_')}.jpg" 
+                 onerror="this.src='https://calscape.org/img/photos/nativeplants/search_no_image.jpg';"
+                 title="Click to view on Calscape">
+        </a>
+        <p style="font-size: 0.8rem;">(Click image to find at nurseries via Calscape)</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 density_choice = st.selectbox(
     "3. How crowded will your plants be?",
@@ -203,7 +241,6 @@ if lawn_sqft:
         if specific_plant == "Average for this type":
             current_ks = pf_by_type[selected_type]
         else:
-            # Match against the title-cased common name column
             current_ks = type_filtered_plants[type_filtered_plants[com_name_col].str.title() == specific_plant][pf_column].values[0]
 
         new_inches = (annual_eto * current_ks * kd)
@@ -276,6 +313,7 @@ st.markdown("""
 <b>Data Sources</b><br>
 - WUCOLS IV (Water Use Classification of Landscape Species)<br>
 - California CIMIS ETo Data (Station #99 - Santa Monica)<br>
-- LADWP Residential Water Rate Schedule (Tier 2)
+- LADWP Residential Water Rate Schedule (Tier 2)<br>
+- Plant Sourcing & Imagery via <a href="https://calscape.org" target="_blank" style="color:#000000; text-decoration:underline;">Calscape.org</a>
 </div>
 """, unsafe_allow_html=True)
