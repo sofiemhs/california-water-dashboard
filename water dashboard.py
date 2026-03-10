@@ -206,7 +206,7 @@ TIER_2_RATE_PER_HCF = 5.50
 water_cost_per_gallon = TIER_2_RATE_PER_HCF / 748
 
 # --------------------------
-# CALCULATIONS
+# CALCULATIONS & TABS
 # --------------------------
 if lawn_sqft:
     try:
@@ -216,40 +216,61 @@ if lawn_sqft:
         lawn_gallons = lawn_inches * lawn_sqft * 0.623
         
         # New Landscape Use (Using Species Factor * Density Factor)
-        new_inches = etc_by_type[selected_type] * kd
+        # Note: selected_type plant factor (Ks) is baked into etc_by_type
+        new_ks = pf_by_type[selected_type]
+        new_inches = (annual_eto * new_ks * kd)
         new_gallons = new_inches * lawn_sqft * 0.623
 
         gallons_saved = lawn_gallons - new_gallons
         cost_saved = gallons_saved * water_cost_per_gallon
 
-        st.header("📊 Results")
+        # CREATE TABS
+        tab1, tab2 = st.tabs(["📊 Results Dashboard", "🧪 Methodology Breakdown"])
 
-        col1, col2 = st.columns(2)
-        col1.metric("Annual Lawn Use", f"{lawn_gallons:,.0f} gal")
-        col2.metric(f"{selected_type} Use", f"{new_gallons:,.0f} gal")
+        with tab1:
+            st.header("Results")
+            col1, col2 = st.columns(2)
+            col1.metric("Annual Lawn Use", f"{lawn_gallons:,.0f} gal")
+            col2.metric(f"{selected_type} Use", f"{new_gallons:,.0f} gal")
 
-        st.success(f"💧 Annual Water Savings: {gallons_saved:,.0f} gallons")
-        st.success(f"💰 Estimated Annual Cost Savings: ${cost_saved:,.2f}")
+            st.success(f"💧 Annual Water Savings: {gallons_saved:,.0f} gallons")
+            st.success(f"💰 Estimated Annual Cost Savings: ${cost_saved:,.2f}")
 
-        st.subheader("Water Use Comparison")
+            st.subheader("Water Use Comparison")
+            fig, ax = plt.subplots()
+            ax.bar(
+                ["Current Lawn", f"{selected_type}"],
+                [lawn_gallons, new_gallons],
+                color=['#4CAF50', '#8BC34A']
+            )
+            ax.set_ylabel("Gallons per Year")
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            ax.yaxis.grid(True, linestyle='--', linewidth=0.8, alpha=0.5)
+            ax.set_axisbelow(True)
+            st.pyplot(fig)
 
-        fig, ax = plt.subplots()
+        with tab2:
+            st.header("Calculation Methodology")
+            st.write("We use the standard Landscape Coefficient Method ($K_L$) to determine irrigation needs.")
+            
+            st.subheader("1. Landscape Evapotranspiration ($ET_L$)")
+            st.write("First, we determine the water depth (inches) required by the landscape:")
+            st.latex(r"ET_L = ET_o \times (K_s \times K_d)")
+            st.markdown(f"""
+            * **$ET_o$ (Reference Evapotranspiration):** {annual_eto:.2f}" (Total annual local evapotranspiration from CIMIS).
+            * **$K_s$ (Species Factor):** {new_ks:.2f} (The water need for {selected_type}).
+            * **$K_d$ (Density Factor):** {kd:.2f} (Based on your '{density_choice.split(' ')[0]}' selection).
+            """)
 
-        ax.bar(
-            ["Current Lawn", f"{selected_type} ({density_choice.split(' ')[0]})"],
-            [lawn_gallons, new_gallons],
-            color=['#4CAF50', '#8BC34A']
-        )
+            st.subheader("2. Total Volume (Gallons)")
+            st.write("We convert depth and area into total gallons:")
+            st.latex(r"Gallons = ET_L \times Area \times 0.623")
+            st.write("* **0.623:** The constant used to convert 1 inch of water over 1 square foot into gallons.")
 
-        ax.set_ylabel("Gallons per Year")
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        
-        # ADDED GRID LINES
-        ax.yaxis.grid(True, linestyle='--', linewidth=0.8, alpha=0.5)
-        ax.set_axisbelow(True)
-
-        st.pyplot(fig)
+            st.subheader("3. Financial Savings")
+            st.latex(r"Savings = (Gallons_{Lawn} - Gallons_{New}) \times \text{Cost per Gallon}")
+            st.write(f"* **Cost per Gallon:** ${water_cost_per_gallon:.5f} (Based on $5.50 per HCF).")
 
     except ValueError:
         st.error("Please enter a valid number for square footage.")
@@ -281,7 +302,7 @@ st.markdown('<div style="text-align:center; margin-top:1rem; font-size:1.1rem; c
             'target="_blank" style="color:#000000; text-decoration: underline;">Good Karma Gardens Website</a></div>', unsafe_allow_html=True)
 
 # --------------------------
-# FOOTER (RESTORED TO ORIGINAL)
+# FOOTER
 # --------------------------
 st.markdown("""
 <div class="footer">
