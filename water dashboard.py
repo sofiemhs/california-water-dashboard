@@ -52,7 +52,6 @@ h1, h2, h3, h4, p, label, li, span, div {{
     color: #1b5e20 !important;
 }}
 
-/* Ensuring LaTeX and Markdown inside tabs specifically are dark green */
 .stMarkdown p, .stMarkdown li, .stMarkdown span {{
     color: #1b5e20 !important;
 }}
@@ -64,7 +63,6 @@ div[data-baseweb="select"] > div {{
     font-weight: 600;
 }}
 
-/* Select box inner text needs to stay white for contrast */
 div[data-baseweb="select"] span {{
     color: #FFFFFF !important;
 }}
@@ -88,12 +86,10 @@ input {{
     border-radius: 8px !important;
 }}
 
-/* Footer override back to black as requested in original */
 .footer, .footer p, .footer b {{
     color: #000000 !important;
 }}
 
-/* Example section override back to black as requested in original */
 .examples, .examples p, .examples li, .examples h4 {{
     color: #000000 !important;
 }}
@@ -102,223 +98,158 @@ input {{
 """, unsafe_allow_html=True)
 
 # --------------------------
-# LOAD DATA
+# LOAD DATA & ERROR HANDLING
 # --------------------------
-wucols = pd.read_excel("WUCOLS_Los Angeles.xlsx")
-cimis = pd.read_csv("daily_eto_variance.csv")
+try:
+    wucols = pd.read_excel("WUCOLS_Los Angeles.xlsx")
+    cimis = pd.read_csv("daily_eto_variance.csv")
+except Exception as e:
+    st.error(f"Error loading data files: {e}")
+    st.stop()
 
+# Robust Column Identification to fix KeyError
 wucols.columns = wucols.columns.str.strip()
 cimis.columns = cimis.columns.str.strip()
 
-type_column = "Type(s)"
-plant_factor_column = "Plant_Factor"
-botanical_name_column = "Botanical Name"
-common_name_column = "Common Name"
+# Find columns dynamically in case names vary (e.g. Common_Name vs Common Name)
+def find_col(possible_names):
+    for name in possible_names:
+        if name in wucols.columns: return name
+    # Fallback to first column that contains the string
+    for col in wucols.columns:
+        if possible_names[0].replace(" ", "").lower() in col.replace("_", "").lower():
+            return col
+    return possible_names[0]
 
-# Filter plants (Excluding Vine, Bamboo, and Bulb for density accuracy)
+type_column = find_col(["Type(s)", "Types"])
+pf_column = find_col(["Plant_Factor", "Plant Factor", "PF"])
+bot_name_col = find_col(["Botanical Name", "Botanical_Name"])
+com_name_col = find_col(["Common Name", "Common_Name"])
+
+# Filter plants (Excluding high-variance types)
 wucols = wucols[
     wucols[type_column].str.contains("California Native", na=False)
     | wucols[type_column].str.contains("Ornamental Grass", na=False)
-]
+].copy()
 
 pf_range_map = {
-    "< 0.10": 0.05,
-    "0.10-0.30": 0.20,
-    "0.40-0.60": 0.50,
-    "0.70-0.90": 0.80
+    "< 0.10": 0.05, "0.10-0.30": 0.20, "0.40-0.60": 0.50, "0.70-0.90": 0.80
 }
 
-wucols[plant_factor_column] = (
-    wucols[plant_factor_column]
-    .astype(str)
-    .str.strip()
-    .map(pf_range_map)
-)
+wucols[pf_column] = wucols[pf_column].astype(str).str.strip().map(pf_range_map)
+wucols = wucols.dropna(subset=[pf_column])
 
-wucols = wucols.dropna(subset=[plant_factor_column])
-
-valid_types = [
-    "Shrub","Ground Cover","Ornamental Grass",
-    "Perennial","Succulent","Palm and Cycad"
-]
+valid_types = ["Shrub","Ground Cover","Ornamental Grass","Perennial","Succulent","Palm and Cycad"]
 
 def extract_primary_type(type_string):
     parts = [p.strip() for p in str(type_string).split(",")]
     for p in parts:
-        if p in valid_types:
-            return p
+        if p in valid_types: return p
     return None
 
 wucols["Primary_Type"] = wucols[type_column].apply(extract_primary_type)
 wucols = wucols.dropna(subset=["Primary_Type"])
 
-pf_by_type = wucols.groupby("Primary_Type")[plant_factor_column].mean()
-
+# Grouping
+pf_by_type = wucols.groupby("Primary_Type")[pf_column].mean()
 cimis["Avg ETo (in)"] = pd.to_numeric(cimis["Avg ETo (in)"], errors="coerce")
 cimis = cimis.dropna(subset=["Avg ETo (in)"])
-
 annual_eto = cimis["Avg ETo (in)"].sum()
-etc_by_type = (pf_by_type * annual_eto).sort_values(ascending=False)
-
-# --------------------------
-# BASELINE
-# --------------------------
-lawn_pf = pf_by_type["Ornamental Grass"]
-lawn_inches = lawn_pf * annual_eto
-plant_options = [p for p in etc_by_type.index if p != "Ornamental Grass"]
-
-# --------------------------
-# TITLE
-# --------------------------
-st.markdown("## 💧 Transform Your Lawn, Save Water!")
-st.caption("Enter lawn size and choose a native plant type to compare water savings.")
 
 # --------------------------
 # USER INPUT
 # --------------------------
+st.markdown("## 💧 Transform Your Lawn, Save Water!")
 st.header("🌿 Enter Your Lawn Information")
 
-lawn_sqft = st.text_input(
-    "Enter total lawn area (square feet):",
-    key="lawn_area_input"
-)
+lawn_sqft = st.text_input("Enter total lawn area (square feet):", key="lawn_area_input")
 
 selected_type = st.selectbox(
-    "Select plant type to convert TO:",
-    plant_options,
-    key="plant_type_select"
+    "1. Select a general plant type:",
+    [p for p in pf_by_type.index if p != "Ornamental Grass"],
+    key="type_select"
 )
 
-# DENSITY DROPDOWN
+# NEW: Specific Plant Selection for better accuracy
+type_filtered_plants = wucols[wucols["Primary_Type"] == selected_type].copy()
+type_filtered_plants["Display_Name"] = type_filtered_plants[com_name_col] + " (" + type_filtered_plants[bot_name_col] + ")"
+
+specific_plant = st.selectbox(
+    f"2. Choose a specific {selected_type} (optional):",
+    options=["Average for this type"] + sorted(type_filtered_plants["Display_Name"].unique().tolist()[:15]),
+    help="Choosing a specific plant provides a more accurate water factor (Ks)."
+)
+
+# NEW: Improved Density Logic
 density_choice = st.selectbox(
-    "Select Planting Density:",
-    options=[
-        "Sparse (Minimalist, lots of space/mulch visible)",
-        "Medium (Standard garden spacing)",
-        "Lush (Dense, overlapping plants/full coverage)"
-    ],
-    index=1,
-    help="Higher density means more leaf surface area and slightly higher water use."
+    "3. Select Planting Density:",
+    options=["Sparse (Lots of space/mulch visible)", "Medium (Standard spacing)", "Lush (Dense/Full coverage)"],
+    index=1
 )
 
-# Density mapping logic
-density_map = {
-    "Sparse (Minimalist, lots of space/mulch visible)": 0.6,
-    "Medium (Standard garden spacing)": 1.0,
-    "Lush (Dense, overlapping plants/full coverage)": 1.3
-}
+density_map = {"Sparse (Lots of space/mulch visible)": 0.6, "Medium (Standard spacing)": 1.0, "Lush (Dense/Full coverage)": 1.3}
 kd = density_map[density_choice]
 
 st.caption("Calculations use LADWP Tier 2 Residential Rate = $5.50 per HCF")
 
 # --------------------------
-# WATER RATE
+# CALCULATIONS
 # --------------------------
 TIER_2_RATE_PER_HCF = 5.50
 water_cost_per_gallon = TIER_2_RATE_PER_HCF / 748
 
-# --------------------------
-# CALCULATIONS & TABS
-# --------------------------
 if lawn_sqft:
     try:
         lawn_sqft = float(lawn_sqft)
-
-        # Baseline Lawn Use (Kd = 1.0)
-        lawn_gallons = lawn_inches * lawn_sqft * 0.623
+        lawn_ks = pf_by_type["Ornamental Grass"]
+        lawn_gallons = (annual_eto * lawn_ks * 1.0) * lawn_sqft * 0.623
         
-        # New Landscape Use (Using Species Factor * Density Factor)
-        new_ks = pf_by_type[selected_type]
-        new_inches = (annual_eto * new_ks * kd)
-        new_gallons = new_inches * lawn_sqft * 0.623
+        # Determine specific KS
+        if specific_plant == "Average for this type":
+            current_ks = pf_by_type[selected_type]
+        else:
+            current_ks = type_filtered_plants[type_filtered_plants["Display_Name"] == specific_plant][pf_column].values[0]
 
+        new_inches = (annual_eto * current_ks * kd)
+        new_gallons = new_inches * lawn_sqft * 0.623
         gallons_saved = lawn_gallons - new_gallons
         cost_saved = gallons_saved * water_cost_per_gallon
 
-        # CREATE TABS
         tab1, tab2 = st.tabs(["📊 Results Dashboard", "🧪 Methodology Breakdown"])
 
         with tab1:
             st.header("Results")
-            col1, col2 = st.columns(2)
-            col1.metric("Annual Lawn Use", f"{lawn_gallons:,.0f} gal")
-            col2.metric(f"{selected_type} Use", f"{new_gallons:,.0f} gal")
-
+            c1, c2 = st.columns(2)
+            c1.metric("Annual Lawn Use", f"{lawn_gallons:,.0f} gal")
+            c2.metric("New Landscape Use", f"{new_gallons:,.0f} gal")
             st.success(f"💧 Annual Water Savings: {gallons_saved:,.0f} gallons")
             st.success(f"💰 Estimated Annual Cost Savings: ${cost_saved:,.2f}")
 
-            st.subheader("Water Use Comparison")
             fig, ax = plt.subplots()
-            ax.bar(
-                ["Current Lawn", f"{selected_type}"],
-                [lawn_gallons, new_gallons],
-                color=['#4CAF50', '#8BC34A']
-            )
+            ax.bar(["Current Lawn", "New Landscape"], [lawn_gallons, new_gallons], color=['#4CAF50', '#8BC34A'])
             ax.set_ylabel("Gallons per Year")
-            ax.spines['top'].set_visible(False)
-            ax.spines['right'].set_visible(False)
-            ax.yaxis.grid(True, linestyle='--', linewidth=0.8, alpha=0.5)
-            ax.set_axisbelow(True)
+            ax.yaxis.grid(True, linestyle='--', alpha=0.5)
             st.pyplot(fig)
 
         with tab2:
             st.header("Calculation Methodology")
-            st.write("We use the standard Landscape Coefficient Method ($K_L$) to determine irrigation needs.")
-            
-            st.subheader("1. Landscape Evapotranspiration ($ET_L$)")
-            st.write("First, we determine the water depth (inches) required by the landscape:")
             st.latex(r"ET_L = ET_o \times (K_s \times K_d)")
             st.markdown(f"""
-            * **$ET_o$ (Reference Evapotranspiration):** {annual_eto:.2f}" (Total annual local evapotranspiration from CIMIS).
-            * **$K_s$ (Species Factor):** {new_ks:.2f} (The water need for {selected_type}).
-            * **$K_d$ (Density Factor):** {kd:.2f} (Based on your density selection).
+            * **$ET_o$:** {annual_eto:.2f}" (Annual local evaporation)
+            * **$K_s$ (Species):** {current_ks:.2f} (Using {'specific selection' if specific_plant != 'Average' else 'type average'})
+            * **$K_d$ (Density):** {kd:.2f} (Using {density_choice.split(' ')[0]} setting)
             """)
-
-            st.subheader("2. Total Volume (Gallons)")
-            st.write("We convert depth and area into total gallons:")
-            st.latex(r"Gallons = ET_L \times Area \times 0.623")
-            st.write("* **0.623:** The constant used to convert 1 inch of water over 1 square foot into gallons.")
-
-            st.subheader("3. Financial Savings")
-            st.latex(r"Savings = (Gallons_{Lawn} - Gallons_{New}) \times \text{Cost per Gallon}")
-            st.write(f"* **Cost per Gallon:** ${water_cost_per_gallon:.5f} (Based on $5.50 per HCF).")
+            st.latex(r"Volume = ET_L \times Area \times 0.623")
 
     except ValueError:
         st.error("Please enter a valid number for square footage.")
 
 # --------------------------
-# EXAMPLES SECTION
-# --------------------------
-if selected_type:
-    # Improved accessibility: Fetching both Common and Botanical names
-    example_data = (
-        wucols[wucols["Primary_Type"] == selected_type][[common_name_column, botanical_name_column]]
-        .dropna()
-        .drop_duplicates()
-    )
-
-    example_list = example_data.head(5)
-
-    if not example_list.empty:
-        st.markdown('<div class="examples">', unsafe_allow_html=True)
-        st.markdown(f"#### Recommended Plants of this Type")
-        
-        # Formatting as "Common Name (Scientific Name)"
-        formatted_names = [f"{row[common_name_column]} (*{row[botanical_name_column]}*)" for _, row in example_list.iterrows()]
-        st.markdown(", ".join(formatted_names))
-        st.markdown('</div>', unsafe_allow_html=True)
-
-# --------------------------
-# MAKE THE CHANGE LINK
-# --------------------------
-st.markdown('<div style="text-align:center; margin-top:1rem; font-size:1.1rem; color:#000000;">'
-            'Make the Change → '
-            '<a href="https://www.nourish.la/good-karma-gardens?gad_source=1&gad_campaignid=23078365112&gbraid=0AAAAAp3lr9qaWt7GIuHmQdK7B69WzZG4V&gclid=Cj0KCQiA49XMBhDRARIsAOOKJHbLQ5znII6Lm6YRfUjNvc-zlInEhDjnUNT0YV1nSAOIWWWYsXbss5kaAjwWEALw_wcB" '
-            'target="_blank" style="color:#000000; text-decoration: underline;">Good Karma Gardens Website</a></div>', unsafe_allow_html=True)
-
-# --------------------------
 # FOOTER
 # --------------------------
+st.markdown('<div style="text-align:center; margin-top:1rem; font-size:1.1rem; color:#000000;">'
+            'Make the Change → <a href="https://www.nourish.la/good-karma-gardens" target="_blank" style="color:#000000;">Good Karma Gardens Website</a></div>', unsafe_allow_html=True)
+
 st.markdown("""
 <div class="footer">
 <hr>
