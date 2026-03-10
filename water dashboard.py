@@ -227,37 +227,39 @@ if lawn_sqft:
         with tab2:
             st.header("Scientific Analysis & Methodology")
             st.write("""
-                The water requirements for this landscape are determined using the **Landscape Coefficient Method**, 
-                which calculates the volume of water lost through evapotranspiration (ET). This method accounts for local 
-                meteorological data, biological transpiration rates, and physical landscape structure.
+                The irrigation demand for this project is calculated via the **Landscape Coefficient Method**, 
+                the industry-standard protocol for determining Supplemental Irrigation Requirements. 
             """)
             
-            st.subheader("Step 1: Quantifying Environmental Demand ($ET_o$)")
+            st.subheader("Step 1: Environmental Demand ($ET_o$) - Santa Monica Station")
             st.write(f"""
-                Reference Evapotranspiration ($ET_o$) is a measure of the environmental demand for water based on 
-                solar radiation, temperature, humidity, and wind speed. Based on local CIMIS meteorological data, 
-                the annual cumulative environmental demand for your area is **{annual_eto:.2f} inches**.
+                Reference Evapotranspiration ($ET_o$) is derived from the **California Irrigation Management Information System (CIMIS)**. 
+                This model utilizes data from **Station #99 (Santa Monica)**, which monitors solar radiation, wind speed, vapor pressure, and air temperature. 
+                Using the Santa Monica station ensures the calculations reflect the specific coastal-influenced microclimate of Los Angeles, where the cumulative annual $ET_o$ is **{annual_eto:.2f} inches**.
             """)
             
-            st.subheader("Step 2: Defining the Landscape Coefficient ($K_L$)")
-            st.write("""
-                The Landscape Coefficient adjusts the reference demand to account for the specific characteristics of the vegetation. 
-                It is calculated as the product of the **Species Factor** ($K_s$) and the **Density Factor** ($K_d$).
+            st.subheader("Step 2: The WUCOLS Species Factor ($K_s$)")
+            st.write(f"""
+                The Species Factor is sourced from the **WUCOLS IV (Water Use Classification of Landscape Species)** database, 
+                maintained by the University of California, Davis. This peer-reviewed database assigns water-need categories 
+                to plants based on horticultural research. 
+                * **Lawn Baseline:** Classified as a 'High' water-use species with a coefficient of **{lawn_ks:.2f}**.
+                * **Current Selection:** Your choice ({specific_plant if specific_plant != 'Average for this type' else selected_type}) has a refined coefficient of **{current_ks:.2f}**.
             """)
-            st.write(f"* **Species Factor ($K_s$):** This represents the physiological water requirements of the plant. A standard lawn has a high coefficient of **{lawn_ks:.2f}**, whereas your selection has a coefficient of **{current_ks:.2f}**.")
-            st.write(f"* **Density Factor ($K_d$):** This accounts for the leaf surface area per unit of ground area. Your '{density_choice.split(' ')[0]}' selection applies a multiplier of **{kd:.2f}**.")
+            
+            st.subheader("Step 3: Density Factor Adjustment ($K_d$)")
+            st.write(f"""
+                Based on guidelines from the **California Department of Water Resources (DWR)**, the Density Factor accounts for 
+                vegetative canopy cover and competition. Your selection of **{density_choice.split(' ')[0]}** applies a coefficient of **{kd:.2f}**, 
+                reflecting the total leaf surface area relative to the ground area.
+            """)
 
-            st.subheader("Step 3: Calculating Total Volumetric Demand")
-            st.write("""
-                To calculate the total annual volume of water required, we convert the depth of water (inches) into volume (gallons) 
-                across the specified square footage using the standard conversion constant (0.623).
-            """)
-            
+            st.subheader("The Fundamental Equation")
             st.latex(r"ET_L = ET_o \times (K_s \times K_d)")
-            st.latex(r"Volume_{(gal)} = ET_L \times Area_{(sqft)} \times 0.623")
+            st.latex(r"Total Gallons = ET_L \times Area_{(sqft)} \times 0.623")
 
             st.markdown("---")
-            st.write("**Note:** 0.623 is the constant representing the volume of water (in gallons) required to cover one square foot to a depth of one inch.")
+            st.write("**Data Integrity Note:** All calculations assume a system efficiency of 100% to isolate the biological water demand difference between species.")
 
     except ValueError:
         st.error("Please enter a valid number for square footage.")
@@ -265,15 +267,12 @@ if lawn_sqft:
 # --------------------------
 # FOOTER
 # --------------------------
-st.markdown('<div style="text-align:center; margin-top:1rem; font-size:1.1rem; color:#000000;">'
-            'Make the Change → <a href="https://www.nourish.la/good-karma-gardens" target="_blank" style="color:#000000;">Good Karma Gardens Website</a></div>', unsafe_allow_html=True)
-
 st.markdown("""
 <div class="footer">
 <hr>
 <b>Data Sources</b><br>
 - WUCOLS IV (Water Use Classification of Landscape Species)<br>
-- California CIMIS ETo Data<br>
+- California CIMIS ETo Data (Station #99 - Santa Monica)<br>
 - LADWP Residential Water Rate Schedule (Tier 2)
 </div>
 """, unsafe_allow_html=True)
