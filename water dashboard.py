@@ -50,6 +50,7 @@ st.markdown(f"""
 /* FORCING DARK GREEN ON ALL GENERAL TEXT */
 h1, h2, h3, h4, p, label, li, span, div {{
     color: #1b5e20 !important;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }}
 
 .stMarkdown p, .stMarkdown li, .stMarkdown span {{
@@ -218,31 +219,19 @@ if lawn_sqft:
             c1.metric("Annual Lawn Use", f"{lawn_gallons:,.0f} gal")
             c2.metric("New Landscape Use", f"{new_gallons:,.0f} gal")
             
-            # --- COLOR CODED TABLE ---
-            st.subheader("📋 Comparison Summary")
-            
-            # Logic for "Good Pick" color coding
+            # --- SIMPLE VERDICT & DYNAMIC CHART COLORS ---
             if new_gallons < lawn_gallons:
-                status_text = "✅ Great Pick (Water Saver)"
-                status_color = "#2e7d32" # Dark Green
+                st.markdown(f"### **It's a good choice because it uses less water!** ✅")
+                st.success(f"💧 Annual Water Savings: {gallons_saved:,.0f} gallons")
+                st.success(f"💰 Estimated Annual Cost Savings: ${cost_saved:,.2f}")
+                chart_colors = ['#1b5e20', '#2e7d32'] # Dark Green for lawn, Lighter Green for better choice
             else:
-                status_text = "⚠️ High Water Use"
-                status_color = "#c62828" # Red
-            
-            comparison_df = pd.DataFrame({
-                "Landscape Type": ["Traditional Lawn", f"Native {display_name}"],
-                "Annual Gallons": [f"{lawn_gallons:,.0f}", f"{new_gallons:,.0f}"],
-                "Efficiency Rating": ["Baseline", status_text]
-            })
-            
-            # Displaying the table
-            st.table(comparison_df)
-            
-            st.success(f"💧 Annual Water Savings: {gallons_saved:,.0f} gallons")
-            st.success(f"💰 Estimated Annual Cost Savings: ${cost_saved:,.2f}")
+                st.markdown(f"### **It's a bad choice because it uses more water.** ❌")
+                st.error(f"⚠️ This selection uses {abs(gallons_saved):,.0f} more gallons per year than a lawn.")
+                chart_colors = ['#1b5e20', '#c62828'] # Dark Green for lawn, Red for bad choice
 
             fig, ax = plt.subplots()
-            ax.bar(["Current Lawn", "New Landscape"], [lawn_gallons, new_gallons], color='#1b5e20')
+            ax.bar(["Current Lawn", "New Landscape"], [lawn_gallons, new_gallons], color=chart_colors)
             ax.set_ylabel("Gallons per Year")
             ax.yaxis.grid(True, linestyle='--', alpha=0.5)
             st.pyplot(fig)
