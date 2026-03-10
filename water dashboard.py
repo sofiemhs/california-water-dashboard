@@ -166,7 +166,6 @@ selected_type = st.selectbox(
     key="type_select"
 )
 
-# Filtering plants by type and removing duplicates for the dropdown
 type_filtered_plants = wucols[wucols["Primary_Type"] == selected_type].copy()
 plant_list = sorted(type_filtered_plants[com_name_col].dropna().unique().tolist())
 
@@ -209,7 +208,7 @@ if lawn_sqft:
         gallons_saved = lawn_gallons - new_gallons
         cost_saved = gallons_saved * water_cost_per_gallon
 
-        tab1, tab2 = st.tabs(["📊 Results Dashboard", "🧪 Methodology (How the Math Works)"])
+        tab1, tab2 = st.tabs(["📊 Results Dashboard", "🧪 Technical Methodology"])
 
         with tab1:
             st.header("Results")
@@ -219,7 +218,6 @@ if lawn_sqft:
             st.success(f"💧 Annual Water Savings: {gallons_saved:,.0f} gallons")
             st.success(f"💰 Estimated Annual Cost Savings: ${cost_saved:,.2f}")
 
-            # BARS ARE NOW THE SAME COLOR
             fig, ax = plt.subplots()
             ax.bar(["Current Lawn", "New Landscape"], [lawn_gallons, new_gallons], color='#1b5e20')
             ax.set_ylabel("Gallons per Year")
@@ -227,24 +225,39 @@ if lawn_sqft:
             st.pyplot(fig)
 
         with tab2:
-            st.header("How do we figure this out?")
-            st.write("Imagine your yard is a giant thirsty sponge. We use three main 'secrets' to calculate how much water it drinks.")
+            st.header("Scientific Analysis & Methodology")
+            st.write("""
+                The water requirements for this landscape are determined using the **Landscape Coefficient Method**, 
+                which calculates the volume of water lost through evapotranspiration (ET). This method accounts for local 
+                meteorological data, biological transpiration rates, and physical landscape structure.
+            """)
             
-            st.subheader("Secret #1: The Sun Factor ($ET_o$)")
-            st.write(f"The sun and wind 'steal' water from the ground. In your area, the sun steals about **{annual_eto:.2f} inches** of water every year! We call this the Reference Evapotranspiration.")
+            st.subheader("Step 1: Quantifying Environmental Demand ($ET_o$)")
+            st.write(f"""
+                Reference Evapotranspiration ($ET_o$) is a measure of the environmental demand for water based on 
+                solar radiation, temperature, humidity, and wind speed. Based on local CIMIS meteorological data, 
+                the annual cumulative environmental demand for your area is **{annual_eto:.2f} inches**.
+            """)
             
-            st.subheader("Secret #2: The Thirsty Factor ($K_s$)")
-            st.write(f"Not all plants drink the same! Grass is very thirsty, but a {selected_type} is much better at saving water.")
-            st.write(f"* Grass has a Thirsty Factor of **{lawn_ks:.2f}**.")
-            st.write(f"* Your choice ({specific_plant if specific_plant != 'Average for this type' else selected_type}) has a Thirsty Factor of **{current_ks:.2f}**.")
+            st.subheader("Step 2: Defining the Landscape Coefficient ($K_L$)")
+            st.write("""
+                The Landscape Coefficient adjusts the reference demand to account for the specific characteristics of the vegetation. 
+                It is calculated as the product of the **Species Factor** ($K_s$) and the **Density Factor** ($K_d$).
+            """)
+            st.write(f"* **Species Factor ($K_s$):** This represents the physiological water requirements of the plant. A standard lawn has a high coefficient of **{lawn_ks:.2f}**, whereas your selection has a coefficient of **{current_ks:.2f}**.")
+            st.write(f"* **Density Factor ($K_d$):** This accounts for the leaf surface area per unit of ground area. Your '{density_choice.split(' ')[0]}' selection applies a multiplier of **{kd:.2f}**.")
+
+            st.subheader("Step 3: Calculating Total Volumetric Demand")
+            st.write("""
+                To calculate the total annual volume of water required, we convert the depth of water (inches) into volume (gallons) 
+                across the specified square footage using the standard conversion constant (0.623).
+            """)
             
-            st.subheader("Secret #3: The Crowd Factor ($K_d$)")
-            st.write(f"If you pack your plants together like a jungle, they use more water. If you leave space for mulch, they use less. You chose **{density_choice.split(' ')[0]}**, which has a multiplier of **{kd:.2f}**.")
+            st.latex(r"ET_L = ET_o \times (K_s \times K_d)")
+            st.latex(r"Volume_{(gal)} = ET_L \times Area_{(sqft)} \times 0.623")
 
             st.markdown("---")
-            st.subheader("The Grand Total Formula")
-            st.write("We multiply the Sun Factor × Thirsty Factor × Crowd Factor to see how many inches of water you need. Then we multiply by your yard size and a 'magic number' (0.623) to turn those inches into gallons!")
-            st.latex(r"\text{Gallons} = \text{Sun} \times \text{Thirsty} \times \text{Crowd} \times \text{Area} \times 0.623")
+            st.write("**Note:** 0.623 is the constant representing the volume of water (in gallons) required to cover one square foot to a depth of one inch.")
 
     except ValueError:
         st.error("Please enter a valid number for square footage.")
