@@ -219,9 +219,8 @@ if lawn_sqft:
             st.success(f"💧 Annual Water Savings: {gallons_saved:,.0f} gallons")
             st.success(f"💰 Estimated Annual Cost Savings: ${cost_saved:,.2f}")
 
-            # Calscape Recommendation
             st.markdown(f"""
-            > **Ready to find these plants?** > We recommend using [**Calscape.org**](https://calscape.org) to find local nurseries that stock these native species and to learn more about their specific care needs.
+            > **Ready to make the switch?** > We recommend using [**Calscape.org**](https://calscape.org) to find local nurseries that stock **{selected_type}s** and to learn more about their specific care needs.
             """)
 
             fig, ax = plt.subplots()
@@ -283,3 +282,4 @@ st.markdown("""
 - Native Plant Research via <a href="https://calscape.org" target="_blank" style="color:#000000; text-decoration:underline;">Calscape.org</a>
 </div>
 """, unsafe_allow_html=True)
+
