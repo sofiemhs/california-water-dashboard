@@ -47,7 +47,13 @@ st.markdown(f"""
     margin-bottom: 5rem;
 }}
 
-h1, h2, h3, h4, p, label {{
+/* FORCING DARK GREEN ON ALL TEXT ELEMENTS */
+h1, h2, h3, h4, p, label, li, span, div {{
+    color: #1b5e20 !important;
+}}
+
+/* Ensuring LaTeX and Markdown inside tabs specifically are dark green */
+.stMarkdown p, .stMarkdown li, .stMarkdown span {{
     color: #1b5e20 !important;
 }}
 
@@ -56,6 +62,11 @@ div[data-baseweb="select"] > div {{
     color: #FFFFFF !important;
     border-radius: 10px !important;
     font-weight: 600;
+}}
+
+/* Select box inner text needs to stay white for contrast */
+div[data-baseweb="select"] span {{
+    color: #FFFFFF !important;
 }}
 
 ul[role="listbox"] {{
@@ -77,12 +88,12 @@ input {{
     border-radius: 8px !important;
 }}
 
-/* Footer text */
+/* Footer override back to black as requested in original */
 .footer, .footer p, .footer b {{
     color: #000000 !important;
 }}
 
-/* Example section text */
+/* Example section override back to black as requested in original */
 .examples, .examples p, .examples li, .examples h4 {{
     color: #000000 !important;
 }}
@@ -101,7 +112,8 @@ cimis.columns = cimis.columns.str.strip()
 
 type_column = "Type(s)"
 plant_factor_column = "Plant_Factor"
-plant_name_column = "Botanical Name"
+botanical_name_column = "Botanical Name"
+common_name_column = "Common Name"
 
 # Filter plants (Excluding Vine, Bamboo, and Bulb for density accuracy)
 wucols = wucols[
@@ -216,7 +228,6 @@ if lawn_sqft:
         lawn_gallons = lawn_inches * lawn_sqft * 0.623
         
         # New Landscape Use (Using Species Factor * Density Factor)
-        # Note: selected_type plant factor (Ks) is baked into etc_by_type
         new_ks = pf_by_type[selected_type]
         new_inches = (annual_eto * new_ks * kd)
         new_gallons = new_inches * lawn_sqft * 0.623
@@ -260,7 +271,7 @@ if lawn_sqft:
             st.markdown(f"""
             * **$ET_o$ (Reference Evapotranspiration):** {annual_eto:.2f}" (Total annual local evapotranspiration from CIMIS).
             * **$K_s$ (Species Factor):** {new_ks:.2f} (The water need for {selected_type}).
-            * **$K_d$ (Density Factor):** {kd:.2f} (Based on your '{density_choice.split(' ')[0]}' selection).
+            * **$K_d$ (Density Factor):** {kd:.2f} (Based on your density selection).
             """)
 
             st.subheader("2. Total Volume (Gallons)")
@@ -279,18 +290,22 @@ if lawn_sqft:
 # EXAMPLES SECTION
 # --------------------------
 if selected_type:
-    example_plants = (
-        wucols[wucols["Primary_Type"] == selected_type][plant_name_column]
+    # Improved accessibility: Fetching both Common and Botanical names
+    example_data = (
+        wucols[wucols["Primary_Type"] == selected_type][[common_name_column, botanical_name_column]]
         .dropna()
-        .unique()
+        .drop_duplicates()
     )
 
-    example_list = example_plants[:5]
+    example_list = example_data.head(5)
 
-    if len(example_list) > 0:
+    if not example_list.empty:
         st.markdown('<div class="examples">', unsafe_allow_html=True)
-        st.markdown(f"#### Scientific Names of Plants of this Type")
-        st.markdown(", ".join(example_list))
+        st.markdown(f"#### Recommended Plants of this Type")
+        
+        # Formatting as "Common Name (Scientific Name)"
+        formatted_names = [f"{row[common_name_column]} (*{row[botanical_name_column]}*)" for _, row in example_list.iterrows()]
+        st.markdown(", ".join(formatted_names))
         st.markdown('</div>', unsafe_allow_html=True)
 
 # --------------------------
