@@ -225,7 +225,7 @@ if lawn_sqft:
             ax.yaxis.grid(True, linestyle='--', alpha=0.5)
             st.pyplot(fig)
 
-         st.markdown(f"""
+            st.markdown(f"""
             > **Ready to make the switch?** > We recommend using Calscape.org to find nurseries that stock **{specific_plant}s**. 
             **Caution:** Plant names can be confusing!! Often times, multiple names can refer to the same plant, so when you seach and nothing seems to show up... don't despare! 
             A quick google seach should help you clear the air and see other variations of the plant's name to help you find the native plants that you seek!
@@ -284,6 +284,7 @@ st.markdown("""
 - Native Plant Research via <a href="https://calscape.org" target="_blank" style="color:#000000; text-decoration:underline;">Calscape.org</a>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
