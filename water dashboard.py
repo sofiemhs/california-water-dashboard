@@ -166,12 +166,14 @@ selected_type = st.selectbox(
     key="type_select"
 )
 
+# Filtering plants by type and removing duplicates for the dropdown
 type_filtered_plants = wucols[wucols["Primary_Type"] == selected_type].copy()
-type_filtered_plants["Display_Name"] = type_filtered_plants[com_name_col] + " (" + type_filtered_plants[bot_name_col] + ")"
+plant_list = sorted(type_filtered_plants[com_name_col].dropna().unique().tolist())
 
 specific_plant = st.selectbox(
-    f"2. Pick a specific {selected_type} (optional):",
-    options=["Average for this type"] + sorted(type_filtered_plants["Display_Name"].unique().tolist()[:15]),
+    f"2. Search for a specific {selected_type} (optional):",
+    options=["Average for this type"] + plant_list,
+    help="Type to search for a specific plant name!"
 )
 
 density_choice = st.selectbox(
@@ -200,7 +202,7 @@ if lawn_sqft:
         if specific_plant == "Average for this type":
             current_ks = pf_by_type[selected_type]
         else:
-            current_ks = type_filtered_plants[type_filtered_plants["Display_Name"] == specific_plant][pf_column].values[0]
+            current_ks = type_filtered_plants[type_filtered_plants[com_name_col] == specific_plant][pf_column].values[0]
 
         new_inches = (annual_eto * current_ks * kd)
         new_gallons = new_inches * lawn_sqft * 0.623
@@ -217,9 +219,9 @@ if lawn_sqft:
             st.success(f"💧 Annual Water Savings: {gallons_saved:,.0f} gallons")
             st.success(f"💰 Estimated Annual Cost Savings: ${cost_saved:,.2f}")
 
-            # COLORS CHANGED TO BE DISTINCTLY DIFFERENT (Red vs Green)
+            # BARS ARE NOW THE SAME COLOR
             fig, ax = plt.subplots()
-            ax.bar(["Current Lawn", "New Landscape"], [lawn_gallons, new_gallons], color=['#d32f2f', '#2e7d32'])
+            ax.bar(["Current Lawn", "New Landscape"], [lawn_gallons, new_gallons], color='#1b5e20')
             ax.set_ylabel("Gallons per Year")
             ax.yaxis.grid(True, linestyle='--', alpha=0.5)
             st.pyplot(fig)
@@ -234,7 +236,7 @@ if lawn_sqft:
             st.subheader("Secret #2: The Thirsty Factor ($K_s$)")
             st.write(f"Not all plants drink the same! Grass is very thirsty, but a {selected_type} is much better at saving water.")
             st.write(f"* Grass has a Thirsty Factor of **{lawn_ks:.2f}**.")
-            st.write(f"* Your new choice has a Thirsty Factor of **{current_ks:.2f}**.")
+            st.write(f"* Your choice ({specific_plant if specific_plant != 'Average for this type' else selected_type}) has a Thirsty Factor of **{current_ks:.2f}**.")
             
             st.subheader("Secret #3: The Crowd Factor ($K_d$)")
             st.write(f"If you pack your plants together like a jungle, they use more water. If you leave space for mulch, they use less. You chose **{density_choice.split(' ')[0]}**, which has a multiplier of **{kd:.2f}**.")
