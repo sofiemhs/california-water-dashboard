@@ -13,11 +13,14 @@ st.set_page_config(
 )
 
 # --------------------------
-# LOAD BACKGROUND IMAGE
+# LOAD BACKGROUND IMAGE (Mocked or handled via local file)
 # --------------------------
 def get_base64(file):
-    with open(file, "rb") as f:
-        return base64.b64encode(f.read()).decode()
+    try:
+        with open(file, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    except FileNotFoundError:
+        return ""
 
 img_base64 = get_base64("wildlifeheader.jpg")
 
@@ -26,14 +29,12 @@ img_base64 = get_base64("wildlifeheader.jpg")
 # --------------------------
 st.markdown(f"""
 <style>
-
 .stApp {{
     background-image: url("data:image/jpg;base64,{img_base64}");
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
 }}
-
 .block-container {{
     background-color: rgba(250, 248, 242, 0.97);
     padding: 3rem;
@@ -43,55 +44,20 @@ st.markdown(f"""
     margin-top: 5rem;
     margin-bottom: 5rem;
 }}
-
-h1, h2, h3, h4, p, label {{
-    color: #1b5e20 !important;
-}}
-
-div[data-baseweb="select"] > div {{
-    background-color: #1b5e20 !important;
-    color: #FFFFFF !important;
-    border-radius: 10px !important;
-    font-weight: 600;
-}}
-
-ul[role="listbox"] {{
-    background-color: #1b5e20 !important;
-}}
-
-ul[role="listbox"] li {{
-    color: #FFFFFF !important;
-    background-color: #1b5e20 !important;
-}}
-
-ul[role="listbox"] li:hover {{
-    background-color: #2e7d32 !important;
-}}
-
-input {{
-    background-color: #f6f3ea !important;
-    color: #1b5e20 !important;
-    border-radius: 8px !important;
-}}
-
-/* Footer text */
-.footer, .footer p, .footer b {{
-    color: #000000 !important;
-}}
-
-/* Example section text */
-.examples, .examples p, .examples li, .examples h4 {{
-    color: #000000 !important;
-}}
-
+h1, h2, h3, h4, p, label {{ color: #1b5e20 !important; }}
 </style>
 """, unsafe_allow_html=True)
 
 # --------------------------
-# LOAD DATA
+# LOAD DATA & CLEANING
 # --------------------------
-wucols = pd.read_excel("WUCOLS_Los Angeles.xlsx")
-cimis = pd.read_csv("daily_eto_variance.csv")
+# Assuming files are present in the directory
+try:
+    wucols = pd.read_excel("WUCOLS_Los Angeles.xlsx")
+    cimis = pd.read_csv("daily_eto_variance.csv")
+except Exception as e:
+    st.error(f"Data files missing: {e}")
+    st.stop()
 
 wucols.columns = wucols.columns.str.strip()
 cimis.columns = cimis.columns.str.strip()
@@ -100,7 +66,7 @@ type_column = "Type(s)"
 plant_factor_column = "Plant_Factor"
 plant_name_column = "Botanical Name"
 
-# Filter plants
+# Filter for Native/Ornamental but REMOVE high-variance density types
 wucols = wucols[
     wucols[type_column].str.contains("California Native", na=False)
     | wucols[type_column].str.contains("Ornamental Grass", na=False)
@@ -122,10 +88,10 @@ wucols[plant_factor_column] = (
 
 wucols = wucols.dropna(subset=[plant_factor_column])
 
+# REFINED TYPES: Removed Vines, Bamboo, and Bulbs for better density predictability
 valid_types = [
-    "Shrub","Ground Cover","Ornamental Grass",
-    "Vine","Perennial","Succulent","Palm and Cycad",
-    "Bamboo","Bulb"
+    "Shrub", "Ground Cover", "Ornamental Grass",
+    "Perennial", "Succulent", "Palm and Cycad"
 ]
 
 def extract_primary_type(type_string):
@@ -142,129 +108,81 @@ pf_by_type = wucols.groupby("Primary_Type")[plant_factor_column].mean()
 
 cimis["Avg ETo (in)"] = pd.to_numeric(cimis["Avg ETo (in)"], errors="coerce")
 cimis = cimis.dropna(subset=["Avg ETo (in)"])
-
 annual_eto = cimis["Avg ETo (in)"].sum()
-etc_by_type = (pf_by_type * annual_eto).sort_values(ascending=False)
 
 # --------------------------
-# BASELINE
-# --------------------------
-lawn_pf = pf_by_type["Ornamental Grass"]
-lawn_inches = lawn_pf * annual_eto
-plant_options = [p for p in etc_by_type.index if p != "Ornamental Grass"]
-
-# --------------------------
-# TITLE
+# TITLE & USER INPUT
 # --------------------------
 st.markdown("## 💧 Transform Your Lawn, Save Water!")
-st.caption("Enter lawn size and choose a native plant type to compare water savings.")
+st.caption("Calculate savings based on plant species and planting density.")
+
+col_left, col_right = st.columns(2)
+
+with col_left:
+    lawn_sqft = st.text_input("Total Area (sq ft):", key="lawn_area_input")
+    selected_type = st.selectbox("Convert TO:", [p for p in pf_by_type.index if p != "Ornamental Grass"])
+
+with col_right:
+    # ADDING DENSITY CONTROL
+    density_label = st.select_slider(
+        "Planting Density:",
+        options=["Sparse", "Average", "Lush"],
+        value="Average",
+        help="Sparse: Lots of mulch/space. Lush: Plants overlapping/full coverage."
+    )
+    
+    # Map selection to a density factor (Kd)
+    density_map = {"Sparse": 0.6, "Average": 1.0, "Lush": 1.3}
+    kd = density_map[density_label]
 
 # --------------------------
-# USER INPUT
-# --------------------------
-st.header("🌿 Enter Your Lawn Information")
-
-lawn_sqft = st.text_input(
-    "Enter total lawn area (square feet):",
-    key="lawn_area_input"
-)
-
-selected_type = st.selectbox(
-    "Select plant type to convert TO:",
-    plant_options,
-    key="plant_type_select"
-)
-
-# --------------------------
-# NEW: Small text for water rate
-# --------------------------
-st.caption("Calculations use LADWP Tier 2 Residential Rate = $5.50 per HCF")
-
-# --------------------------
-# WATER RATE
+# WATER CALCULATIONS
 # --------------------------
 TIER_2_RATE_PER_HCF = 5.50
 water_cost_per_gallon = TIER_2_RATE_PER_HCF / 748
 
-# --------------------------
-# CALCULATIONS
-# --------------------------
 if lawn_sqft:
     try:
         lawn_sqft = float(lawn_sqft)
+        
+        # LAWN baseline (Usually Kd=1.0 because grass is a carpet)
+        lawn_ks = pf_by_type["Ornamental Grass"]
+        lawn_gallons = (annual_eto * lawn_ks * 1.0) * lawn_sqft * 0.623
 
-        new_inches = etc_by_type[selected_type]
-
-        lawn_gallons = lawn_inches * lawn_sqft * 0.623
-        new_gallons = new_inches * lawn_sqft * 0.623
+        # NEW LANDSCAPE
+        new_ks = pf_by_type[selected_type]
+        # Formula: ET_L = ETo * (Ks * Kd)
+        new_gallons = (annual_eto * (new_ks * kd)) * lawn_sqft * 0.623
 
         gallons_saved = lawn_gallons - new_gallons
         cost_saved = gallons_saved * water_cost_per_gallon
 
+        st.divider()
         st.header("📊 Results")
 
-        col1, col2 = st.columns(2)
-        col1.metric("Annual Lawn Use", f"{lawn_gallons:,.0f} gal")
-        col2.metric(f"{selected_type} Use", f"{new_gallons:,.0f} gal")
+        m1, m2, m3 = st.columns(3)
+        m1.metric("Lawn Use", f"{lawn_gallons:,.0f} gal")
+        m2.metric(f"New {selected_type} Use", f"{new_gallons:,.0f} gal")
+        m3.metric("Savings", f"{gallons_saved:,.0f} gal", delta_color="normal")
 
-        st.success(f"💧 Annual Water Savings: {gallons_saved:,.0f} gallons")
-        st.success(f"💰 Estimated Annual Cost Savings: ${cost_saved:,.2f}")
+        st.success(f"💰 **Estimated Annual Cost Savings: ${cost_saved:,.2f}**")
 
-        st.subheader("Water Use Comparison")
-
-        fig, ax = plt.subplots()
-
-        ax.bar(
-            ["Current Lawn", selected_type],
-            [lawn_gallons, new_gallons]
-        )
-
+        # Visuals
+        fig, ax = plt.subplots(figsize=(8, 4))
+        bars = ax.bar(["Current Lawn", f"New {selected_type}"], [lawn_gallons, new_gallons], color=['#d32f2f', '#2e7d32'])
         ax.set_ylabel("Gallons per Year")
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.yaxis.grid(True, linestyle='--', linewidth=0.8, alpha=0.5)
-        ax.set_axisbelow(True)
-
+        ax.set_title(f"Impact of {density_label} Density Planting")
         st.pyplot(fig)
 
     except ValueError:
-        st.error("Please enter a valid number for square footage.")
-
-# --------------------------
-# EXAMPLES SECTION
-# --------------------------
-if selected_type:
-    example_plants = (
-        wucols[wucols["Primary_Type"] == selected_type][plant_name_column]
-        .dropna()
-        .unique()
-    )
-
-    example_list = example_plants[:5]
-
-    if len(example_list) > 0:
-        st.markdown('<div class="examples">', unsafe_allow_html=True)
-        st.markdown(f"#### Scientific Names of Plants of this Type")
-        st.markdown(", ".join(example_list))
-        st.markdown('</div>', unsafe_allow_html=True)
-
-# --------------------------
-# MAKE THE CHANGE LINK
-# --------------------------
-st.markdown('<div style="text-align:center; margin-top:1rem; font-size:1.1rem; color:#000000;">'
-            'Make the Change → '
-            '<a href="https://www.nourish.la/good-karma-gardens?gad_source=1&gad_campaignid=23078365112&gbraid=0AAAAAp3lr9qaWt7GIuHmQdK7B69WzZG4V&gclid=Cj0KCQiA49XMBhDRARIsAOOKJHbLQ5znII6Lm6YRfUjNvc-zlInEhDjnUNT0YV1nSAOIWWWYsXbss5kaAjwWEALw_wcB" '
-            'target="_blank" style="color:#000000; text-decoration: underline;">Good Karma Gardens Website</a></div>', unsafe_allow_html=True)
+        st.error("Please enter a numeric value for square footage.")
 
 # --------------------------
 # FOOTER
 # --------------------------
 st.markdown("""
-<div class="footer">
-<hr>
-<b>Data Sources</b><br>
-- WUCOLS IV (Water Use Classification of Landscape Species)<br>
-- California CIMIS ETo Data<br>
-- LADWP Residential Water Rate Schedule (Tier 2)
+<div style="font-size:0.8rem; color:gray; margin-top:2rem;">
+<b>Technical Note:</b> Calculations use the Landscape Coefficient Method 
+$K_L = K_s \\times K_d$, where $K_s$ is the species factor and $K_d$ is the density factor.
 </div>
 """, unsafe_allow_html=True)
