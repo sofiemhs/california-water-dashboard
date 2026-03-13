@@ -3,18 +3,14 @@ import matplotlib.pyplot as plt
 import streamlit as st
 import base64
 
-# --------------------------
 # PAGE CONFIG
-# --------------------------
 st.set_page_config(
     page_title="Transform Your Lawn 💧",
     page_icon="💧",
     layout="centered"
 )
 
-# --------------------------
-# LOAD BACKGROUND IMAGE
-# --------------------------
+# BACKGROUND IMAGE
 def get_base64(file):
     try:
         with open(file, "rb") as f:
@@ -24,9 +20,7 @@ def get_base64(file):
 
 img_base64 = get_base64("wildlifeheader.jpg")
 
-# --------------------------
-# GLOBAL STYLING
-# --------------------------
+#  STYLING
 st.markdown(f"""
 <style>
 
@@ -99,9 +93,7 @@ input {{
 </style>
 """, unsafe_allow_html=True)
 
-# --------------------------
-# LOAD DATA & ERROR HANDLING
-# --------------------------
+# LOAD DATA 
 try:
     wucols = pd.read_excel("WUCOLS_Los Angeles.xlsx")
     cimis = pd.read_csv("daily_eto_variance.csv")
@@ -153,9 +145,7 @@ cimis["Avg ETo (in)"] = pd.to_numeric(cimis["Avg ETo (in)"], errors="coerce")
 cimis = cimis.dropna(subset=["Avg ETo (in)"])
 annual_eto = cimis["Avg ETo (in)"].sum()
 
-# --------------------------
 # USER INPUT
-# --------------------------
 st.markdown("## 💧 Transform Your Lawn, Save Water!")
 st.header("🌿 Enter Your Lawn Information")
 
@@ -187,9 +177,7 @@ kd = density_map[density_choice]
 
 st.caption("Calculations use LADWP Tier 2 Residential Rate = $5.50 per HCF")
 
-# --------------------------
-# CALCULATIONS
-# --------------------------
+# CALC
 TIER_2_RATE_PER_HCF = 5.50
 water_cost_per_gallon = TIER_2_RATE_PER_HCF / 748
 
@@ -219,7 +207,7 @@ if lawn_sqft:
             c1.metric("Annual Lawn Use", f"{lawn_gallons:,.0f} gal")
             c2.metric("New Landscape Use", f"{new_gallons:,.0f} gal")
             
-            # --- SIMPLE VERDICT & DYNAMIC CHART COLORS ---
+            # CHART COLORS
             if new_gallons < lawn_gallons:
                 st.markdown(f"### **It's a good choice because it uses less water!** ✅")
                 st.success(f"💧 Annual Water Savings: {gallons_saved:,.0f} gallons")
@@ -283,9 +271,7 @@ if lawn_sqft:
     except ValueError:
         st.error("Please enter a valid number for square footage.")
 
-# --------------------------
 # FOOTER
-# --------------------------
 st.markdown("""
 <div class="footer">
 <hr>
@@ -296,3 +282,4 @@ st.markdown("""
 - Native Plant Research via <a href="https://calscape.org" target="_blank" style="color:#000000; text-decoration:underline;">Calscape.org</a>
 </div>
 """, unsafe_allow_html=True)
+
