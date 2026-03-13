@@ -290,8 +290,8 @@ st.markdown("""
 <div class="footer">
 <hr>
 <b>Data Sources</b><br>
-- WUCOLS IV (Water Use Classification of Landscape Species)<br>
-- California CIMIS ETo Data (Station #99 - Santa Monica)<br>
+- <a href="https://wucols.ucdavis.edu/plant-search-database" target="_blank" style="color:#000000; text-decoration:underline;">WUCOLS IV</a> (Water Use Classification of Landscape Species) - Los Angeles Region 3<br>
+- California <a href="https://cimis.water.ca.gov/" target="_blank" style="color:#000000; text-decoration:underline;">CIMIS</a> ETo Data (Station #99 - Santa Monica)<br>
 - LADWP Residential Water Rate Schedule (Tier 2)<br>
 - Native Plant Research via <a href="https://calscape.org" target="_blank" style="color:#000000; text-decoration:underline;">Calscape.org</a>
 </div>
